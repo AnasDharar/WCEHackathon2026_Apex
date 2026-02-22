@@ -2,6 +2,7 @@
 import { useState, useRef } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { NotificationProvider } from "@/context/NotificationContext";
 
 // Icons as simple SVG components
 const ChevronLeft = () => (
@@ -145,7 +146,9 @@ export default function HomeLayout({ children }) {
       {/* Main Content */}
       <main className="flex-1 p-6 overflow-y-auto">
         <div className="max-w-6xl mx-auto">
-          {children}
+          <NotificationProvider>
+            {children}
+          </NotificationProvider>
         </div>
       </main>
     </div>
