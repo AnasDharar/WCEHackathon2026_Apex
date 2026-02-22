@@ -1,11 +1,22 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { auth } from "../../firebaseConfig";
 import { onAuthStateChanged } from "firebase/auth";
-import { redirect } from "next/navigation";
 
 export default function Header({ title, subtitle }) {
   const [user, setUser] = useState(null);
+  const [showDropdown, setShowDropdown] = useState(false);
+  const dropdown = useRef(null);
+  
+  useEffect(() => {
+    if (showDropdown) {
+      dropdown.current?.classList.remove("hidden");
+      dropdown.current?.classList.add("block");
+    } else {
+      dropdown.current?.classList.add("hidden");
+      dropdown.current?.classList.remove("block");
+    }
+  }, [showDropdown]);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
@@ -13,10 +24,6 @@ export default function Header({ title, subtitle }) {
     });
     return () => unsubscribe();
   }, []);
-
-  if(!user){
-    redirect("/signin");
-  }
   return (
     <div className="mb-6 flex justify-between items-center">
       <div>
@@ -34,7 +41,7 @@ export default function Header({ title, subtitle }) {
 
         </div>
 
-        <div className="flex justify-center items-center gap-2 cursor-pointer px-4 h-12 rounded-full bg-gray-50 border-2 border-gray-200">
+        <div className="relative flex justify-center items-center gap-2 cursor-pointer px-4 h-12 rounded-full bg-gray-50 border-2 border-gray-200" onClick={() => setShowDropdown(!showDropdown)}>
           <div className="w-8 h-8 rounded-full overflow-hidden border-2 border-gray-700">
             {user?.photoURL ? (
               <img src={user.photoURL} alt="Profile" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
@@ -48,10 +55,15 @@ export default function Header({ title, subtitle }) {
             <div className="text-[14px] text-gray-700 font-bold">{user?.displayName || "User"}</div>
             <div className="text-[10px] text-gray-400">{user?.email || ""}</div>
           </div>
-          <div>
+          <div className="cursor-pointer hover:bg-gray-100 rounded-full" onClick={() => setShowDropdown(!showDropdown)}>
             <svg width="26" height="26" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
               <path d="M7 10L12 15L17 10" stroke="#000000" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
             </svg>
+          </div>
+          <div className="absolute top-12 border-2 border-gray-200 left-0 w-48 bg-white rounded-lg hidden" ref={dropdown}>
+            <div className="px-4 py-2 hover:bg-gray-100">Account Settings</div>
+            <div className="px-4 py-2 hover:bg-gray-100">Edit Profile</div>
+            <div className="px-4 py-2 hover:bg-gray-100 text-red-600 font-semibold">Logout</div>
           </div>
         </div>
       </div>
