@@ -1,5 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
+import Header from "@/components/Header";
 
 // Generate calendar data for the current month
 const generateCalendarData = () => {
@@ -95,16 +96,15 @@ export default function Overview() {
 
   return (
     <>
-      {/* Header */}
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold font-google text-gray-800">Dashboard</h1>
-        <p className="text-gray-500 text-sm">Welcome back, John! Here's your wellness overview.</p>
-      </div>
+      <Header 
+        title="Dashboard" 
+        subtitle="Welcome back, John! Here's your wellness overview." 
+      />
 
       {/* Dashboard Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 font-google">
+      <div className="grid grid-cols-1 lg:grid-cols-6 gap-6 font-google">
         {/* Test Results Card */}
-        <div className="bg-white rounded-3xl border border-gray-200 p-5 shadow-sm">
+        <div className="bg-white rounded-3xl border col-span-3 border-gray-200 p-5 shadow-sm">
           <h2 className="text-lg font-google text-gray-800 mb-4 flex items-center gap-2">
             Test Results (Feedback by AI)
           </h2>
@@ -123,7 +123,7 @@ export default function Overview() {
         </div>
 
         {/* Live Appointments Card */}
-        <div className="bg-white rounded-3xl border border-gray-200 p-5 shadow-sm font-google">
+        <div className="bg-white rounded-3xl border col-span-3 border-gray-200 p-5 shadow-sm font-google">
           <h2 className="text-lg font-google text-gray-800 mb-4 flex items-center gap-2">
             
             Live Appointments
@@ -154,15 +154,15 @@ export default function Overview() {
           </div>
         </div>
 
-        {/* Habit Tracker Calendar */}
+        {/* Habit Tracker */}
         <div className="bg-white rounded-xl border border-gray-200 p-5 shadow-sm lg:col-span-2 font-google">
-          <h2 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
+          <h2 className="text-lg font-google text-gray-800 mb-4 flex items-center gap-2">
             
-            Habit Tracker Calendar
+            Today's Habits
           </h2>
-          <div className="flex flex-col lg:flex-row gap-6">
-            {/* Today's Habits */}
-            <div className="lg:w-1/3">
+          <div className="flex flex-col lg:flex-row gap-6 items-center">
+            {/* Today's Habits Checklist */}
+            <div className="lg:w-1/2">
               <p className="text-sm text-gray-500 mb-3">February 22, 2026</p>
               <div className="space-y-2">
                 {habits.map((habit) => (
@@ -188,8 +188,48 @@ export default function Overview() {
               </div>
             </div>
 
-            {/* Calendar Grid */}
-            <div className="lg:w-2/3">
+            {/* Progress Ring Chart */}
+            <div className="lg:w-1/2 flex flex-col items-center justify-center">
+              <div className="relative w-32 h-32">
+                <svg className="w-32 h-32 transform -rotate-90" viewBox="0 0 120 120">
+                  {/* Background circle */}
+                  <circle
+                    cx="60"
+                    cy="60"
+                    r="50"
+                    fill="none"
+                    stroke="#e5e7eb"
+                    strokeWidth="12"
+                  />
+                  {/* Progress circle */}
+                  <circle
+                    cx="60"
+                    cy="60"
+                    r="50"
+                    fill="none"
+                    stroke="#10b981"
+                    strokeWidth="12"
+                    strokeLinecap="round"
+                    strokeDasharray={`${(habits.filter(h => h.completed).length / habits.length) * 314} 314`}
+                    className="transition-all duration-500 ease-out"
+                  />
+                </svg>
+                <div className="absolute inset-0 flex flex-col items-center justify-center">
+                  <span className="text-2xl font-bold text-gray-800">
+                    {habits.filter(h => h.completed).length}/{habits.length}
+                  </span>
+                  <span className="text-xs text-gray-500">completed</span>
+                </div>
+              </div>
+              <p className="mt-3 text-sm text-gray-600 text-center">
+                {Math.round((habits.filter(h => h.completed).length / habits.length) * 100)}% of today's habits done
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-white rounded-xl border border-gray-200 p-5 shadow-sm lg:col-span-2 font-google">
+          <div className="m-4">
               <div className="flex justify-between items-center mb-3">
                 <h3 className="font-medium text-gray-700">February 2026</h3>
                 <div className="flex items-center gap-3 text-xs text-gray-500">
@@ -240,7 +280,6 @@ export default function Overview() {
                 ))}
               </div>
             </div>
-          </div>
         </div>
 
         {/* Resources Card */}
@@ -249,7 +288,7 @@ export default function Overview() {
                 
             Resources
           </h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-4">
             {resources.map((resource) => (
               <div
                 key={resource.id}

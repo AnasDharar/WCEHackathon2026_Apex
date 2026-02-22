@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useState, useRef } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
@@ -70,51 +70,49 @@ const navItems = [
 ];
 
 export default function HomeLayout({ children }) {
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(true);
   const pathname = usePathname();
+  const collapseTimeoutRef = useRef(null);
+
+  const handleMouseEnter = () => {
+    if (collapseTimeoutRef.current) {
+      clearTimeout(collapseTimeoutRef.current);
+      collapseTimeoutRef.current = null;
+    }
+    setSidebarCollapsed(false);
+  };
+
+  const handleMouseLeave = () => {
+    collapseTimeoutRef.current = setTimeout(() => {
+      setSidebarCollapsed(true);
+    }, 200);
+  };
 
   return (
-    <div className="flex min-h-screen bg-gray-50">
+    <div className="flex min-h-screen bg-gray-100">
       {/* Sidebar */}
-      <aside
-        className={`${
-          sidebarCollapsed ? "w-20" : "w-64"
-        } bg-white border-r border-gray-200 sticky top-0 h-screen flex flex-col transition-all duration-300 ease-in-out`}
-      >
-        {/* Minimize Button */}
-        <button
-          onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-          className="absolute -right-3 top-6 bg-white border border-gray-200 rounded-full p-1 shadow-sm hover:bg-gray-50 transition-colors z-10"
-          title={sidebarCollapsed ? "Expand sidebar" : "Minimize sidebar"}
+      <div className="h-screen sticky top-0 p-4">
+        <aside
+          onMouseEnter={handleMouseEnter}
+          onMouseLeave={handleMouseLeave}
+          className={`${
+            sidebarCollapsed ? "w-20" : "w-64"
+          } bg-white border-2 border-gray-200 rounded-3xl h-full flex flex-col transition-all duration-300 ease-in-out`}
         >
-          {sidebarCollapsed ? <ChevronRight /> : <ChevronLeft />}
-        </button>
 
         {/* Logo Area */}
-        <div className="p-4 border-b border-gray-100">
-          <div className="flex items-center gap-3">
+        <div className="p-4 flex justify-center items-center">
+          <div className="">
             {!sidebarCollapsed && (
-              <span className="font-semibold text-gray-800">Manah Arogya logo here</span>
+              <img
+                src="/logo_1.jpeg"
+                alt="Logo" />
             )}
-          </div>
-        </div>
-
-        {/* Profile Section */}
-        <div className={`p-4 border-b border-gray-100 ${sidebarCollapsed ? "items-center" : ""}`}>
-          <div className={`flex ${sidebarCollapsed ? "justify-center" : "gap-3"}`}>
-            <img
-              src="/profile_sample.png"
-              alt="Profile"
-              className="w-10 h-10 rounded-full border-2 border-emerald-200 object-cover"
-              onError={(e) => {
-                e.target.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='40' viewBox='0 0 40 40'%3E%3Ccircle cx='20' cy='20' r='20' fill='%2310b981'/%3E%3Ctext x='20' y='25' text-anchor='middle' fill='white' font-size='16' font-family='Arial'%3EJ%3C/text%3E%3C/svg%3E";
-              }}
-            />
-            {!sidebarCollapsed && (
-              <div>
-                <p className="font-medium text-gray-800 text-sm">John Doe</p>
-                <p className="text-xs text-gray-500">View Profile</p>
-              </div>
+            {sidebarCollapsed && (
+              <img
+                src="/logo_1_short.png"
+                alt="Logo Icon"
+                className="w-8 h-auto" />
             )}
           </div>
         </div>
@@ -142,6 +140,7 @@ export default function HomeLayout({ children }) {
           })}
         </nav>
       </aside>
+      </div>
 
       {/* Main Content */}
       <main className="flex-1 p-6 overflow-y-auto">

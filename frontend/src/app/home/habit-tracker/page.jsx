@@ -1,10 +1,12 @@
+import Header from "@/components/Header";
+
 export default function HabitTracker() {
   return (
     <>
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-800">Habit Tracker</h1>
-        <p className="text-gray-500 text-sm">Track your daily habits and build consistency.</p>
-      </div>
+      <Header 
+        title="Habit Tracker" 
+        subtitle="Track your daily habits and build consistency." 
+      />
       <div className="bg-white rounded-xl border border-gray-200 p-8 shadow-sm flex items-center justify-center min-h-[400px]">
         <div className="text-center">
           <div className="w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-4">

@@ -1,10 +1,12 @@
+import Header from "@/components/Header";
+
 export default function AIChatbot() {
   return (
     <>
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-800">AI Chatbot</h1>
-        <p className="text-gray-500 text-sm">Chat with our AI assistant for wellness support.</p>
-      </div>
+      <Header 
+        title="AI Chatbot" 
+        subtitle="Chat with our AI assistant for wellness support." 
+      />
       <div className="bg-white rounded-xl border border-gray-200 p-8 shadow-sm flex items-center justify-center min-h-[400px]">
         <div className="text-center">
           <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
