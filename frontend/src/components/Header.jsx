@@ -1,4 +1,18 @@
+"use client";
+import { useState, useEffect } from "react";
+import { auth } from "../../firebaseConfig";
+import { onAuthStateChanged } from "firebase/auth";
+
 export default function Header({ title, subtitle }) {
+  const [user, setUser] = useState(null);
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      setUser(currentUser);
+    });
+    return () => unsubscribe();
+  }, []);
+
   return (
     <div className="mb-6 flex justify-between items-center">
       <div>
@@ -38,11 +52,17 @@ export default function Header({ title, subtitle }) {
 
         <div className="flex justify-center items-center gap-2 cursor-pointer px-4 h-12 rounded-full bg-gray-50 border-2 border-gray-200">
           <div className="w-8 h-8 rounded-full overflow-hidden border-2 border-gray-700">
-            <img src="/logo_1_short.png" alt="Profile image" className="w-full h-full object-cover" />
+            {user?.photoURL ? (
+              <img src={user.photoURL} alt="Profile" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+            ) : (
+              <div className="w-full h-full bg-emerald-500 flex items-center justify-center text-white font-bold text-sm">
+                {user?.displayName?.charAt(0) || user?.email?.charAt(0) || "U"}
+              </div>
+            )}
           </div>
           <div className="font-google">
-            <div className="text-[14px] text-gray-700 font-bold">Anas Dharar</div>
-            <div className="text-[10px] text-gray-400">dhararanas94@gmail.com</div>
+            <div className="text-[14px] text-gray-700 font-bold">{user?.displayName || "User"}</div>
+            <div className="text-[10px] text-gray-400">{user?.email || ""}</div>
           </div>
           <div>
             <svg width="26" height="26" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
