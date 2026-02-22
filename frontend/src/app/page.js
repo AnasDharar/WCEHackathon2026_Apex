@@ -3,6 +3,7 @@
 import { useTransform, motion } from "motion/react";
 import { useRef } from "react";
 import BgScroll, { useScrollContext } from "@/components/BgScroll";
+import Link from "next/link";
 
 // Scroll-linked text overlay component
 function ScrollOverlay({ children, scrollRange, className = "", immediate = false }) {
@@ -134,7 +135,7 @@ export default function Home() {
                 transition={{ duration: 0.8, delay: 1.4 }}
                 className="mt-8 flex flex-col sm:flex-row gap-4 pointer-events-auto"
               >
-                <CTAButton primary>Sign in</CTAButton>
+                  <Link href="/signin" passHref><CTAButton primary>Sign in</CTAButton></Link>
                 <CTAButton>Explore Features</CTAButton>
               </motion.div>
               

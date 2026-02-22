@@ -1,7 +1,7 @@
 "use client";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { auth, provider, analytics, signInWithPopup, signOut } from "../../../firebaseConfig";
+import { auth, provider, signInWithPopup, signOut } from "../../../firebaseConfig";
 import Link from "next/link";
 
 // Google Icon
