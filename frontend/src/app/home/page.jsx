@@ -256,13 +256,6 @@ export default function Overview() {
                 className="p-4 bg-gray-50 rounded-lg border border-gray-100 hover:border-emerald-200 hover:bg-emerald-50 transition-colors cursor-pointer group"
               >
                 <div className="flex items-center gap-2 mb-2">
-                  <span className={`text-xs px-2 py-0.5 rounded-full ${
-                    resource.type === "Article" ? "bg-blue-100 text-blue-700" :
-                    resource.type === "Audio" ? "bg-purple-100 text-purple-700" :
-                    "bg-red-100 text-red-700"
-                  }`}>
-                    {resource.type}
-                  </span>
                 </div>
                 <h3 className="font-medium text-gray-800 group-hover:text-emerald-700 transition-colors">
                   {resource.title}
