@@ -1,8 +1,8 @@
 "use client";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { auth, provider, signInWithPopup, signOut } from "../../../firebaseConfig";
-import Link from "next/link";
+import { auth, provider, signInWithPopup, signOut, db } from "../../../firebaseConfig";
+import { doc, getDoc, setDoc, serverTimestamp } from "firebase/firestore";
 
 // Google Icon
 const GoogleIcon = () => (
@@ -27,7 +27,28 @@ export default function SignIn() {
       // Add your Firebase Google sign-in logic here
       const result = await signInWithPopup(auth, provider);
       console.log("Google sign-in successful:", result.user);
-      router.push("/home");
+      const user = result.user;
+      const userRef = doc(db, "users", user.uid);
+      console.log("User reference:", userRef);
+      const userDocSnapshot = await getDoc(userRef);
+      console.log("User document snapshot:", userDocSnapshot);
+      if(userDocSnapshot.exists() && userDocSnapshot.data().testGiven){
+        console.log("User already exists");
+        router.push("/home");
+      }else{
+        console.log("User does not exist");
+        await setDoc(userRef, {
+        uid: user.uid,
+        email: user.email,
+        displayName: user.displayName,
+        photoURL: user.photoURL,
+        userDescription: "",
+        testGiven: false,
+        createdAt: serverTimestamp(),
+      });
+      console.log("User created successfully");
+      router.push("/test");
+    }
     } catch (err) {
       setError("Google sign-in failed. Please try again.");
     } finally {

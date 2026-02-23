@@ -1,6 +1,8 @@
 "use client";
 import { useState, useEffect } from "react";
 import Header from "@/components/Header";
+import { auth } from "../../../firebaseConfig";
+import { doc, getDoc } from "firebase/firestore";
 
 // Generate calendar data for the current month
 const generateCalendarData = () => {
@@ -79,6 +81,7 @@ const VideoIcon = () => (
 );
 
 export default function Overview() {
+  const user = auth.currentUser;
   const [calendarData, setCalendarData] = useState(getInitialCalendarData);
   const [habits, setHabits] = useState(initialHabits);
   const today = 22; // Current day
@@ -92,6 +95,19 @@ export default function Overview() {
     setHabits(habits.map(habit => 
       habit.id === id ? { ...habit, completed: !habit.completed } : habit
     ));
+  };
+
+  const getUserData = async () => {
+    const user = auth.currentUser;
+    if (user) {
+      const userRef = doc(db, "users", user.uid);
+      const userDoc = await getDoc(userRef);
+      if (userDoc.exists()) {
+        if(userDoc.testGiven==false){
+          router.push("/test");
+        }
+      }
+    }
   };
 
   return (
