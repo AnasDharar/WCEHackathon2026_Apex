@@ -50,7 +50,7 @@ const CommunityIcon = () => (
 const navItems = [
   { id: "overview", label: "Overview", icon: OverviewIcon, href: "/home" },
   { id: "habit-tracker", label: "Habit Tracker", icon: HabitIcon, href: "/home/habit-tracker" },
-  { id: "ai-chatbot", label: "AI Chatbot", icon: ChatbotIcon, href: "/home/ai-chatbot" },
+  { id: "ai-chatbot", label: "AI Assistant", icon: ChatbotIcon, href: "/home/ai-chatbot" },
   { id: "resources", label: "Resources", icon: ResourcesIcon, href: "/home/resources" },
   { id: "appointments", label: "Appointments", icon: AppointmentsIcon, href: "/home/appointments" },
   { id: "events", label: "Events", icon: EventsIcon, href: "/home/events" },
@@ -94,7 +94,9 @@ export default function HomeLayout({ children }) {
             {!sidebarCollapsed && (
               <img
                 src="/logo_1.jpeg"
-                alt="Logo" />
+                alt="Manah Arogya"
+                className="h-9 w-auto object-contain"
+              />
             )}
             {sidebarCollapsed && (
               <img
@@ -141,3 +143,6 @@ export default function HomeLayout({ children }) {
     </div>
   );
 }
+
+
+

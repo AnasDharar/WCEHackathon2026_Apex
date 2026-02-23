@@ -1,184 +1,219 @@
-import Header from "@/components/Header";
+"use client";
 
-const events = [
-  {
-    id: 1,
-    title: "Mental Health Awareness Workshop",
-    type: "Workshop",
-    date: "26 Feb 2026",
-    time: "4:00 PM – 6:00 PM",
-    location: "Tilak Hall",
-    tag: "On-campus",
-    description:
-      "Interactive session on understanding stress, anxiety, and building healthy coping mechanisms with campus counselors.",
-  },
-  {
-    id: 2,
-    title: "Morning Exercise & Mindfulness",
-    type: "Wellness Activity",
-    date: "27 Feb 2026",
-    time: "7:00 AM – 8:00 AM",
-    location: "Tilak Hall Lawn",
-    tag: "Open to all",
-    description:
-      "Guided stretching, light cardio, and short mindfulness practice to start your day with energy and calm.",
-  },
-  {
-    id: 3,
-    title: "Peer Support Circle",
-    type: "Group Session",
-    date: "01 Mar 2026",
-    time: "5:00 PM – 6:30 PM",
-    location: "Tilak Hall",
-    tag: "Limited seats",
-    description:
-      "Facilitated safe-space circle where students can share experiences about academics, relationships, and burnout.",
-  },
+import { useEffect, useMemo, useState } from "react";
+
+import Header from "@/components/Header";
+import { api } from "@/lib/api";
+
+const categoryTabs = [
+  { id: "all", label: "All" },
+  { id: "workshop", label: "Workshops" },
+  { id: "masterclass", label: "Masterclasses" },
+  { id: "community-circle", label: "Community Circles" },
 ];
 
 export default function Events() {
+  const [featured, setFeatured] = useState(null);
+  const [upcoming, setUpcoming] = useState([]);
+  const [weeklyLineup, setWeeklyLineup] = useState([]);
+  const [activeCategory, setActiveCategory] = useState("all");
+
+  const [loading, setLoading] = useState(true);
+  const [actionLoading, setActionLoading] = useState({});
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    let mounted = true;
+
+    async function loadEvents() {
+      setLoading(true);
+      setError("");
+      try {
+        const res = await api.get("/events", {
+          params: {
+            category: activeCategory === "all" ? undefined : activeCategory,
+          },
+        });
+
+        if (!mounted) {
+          return;
+        }
+
+        setFeatured(res?.featured || res?.data?.featured || null);
+        setUpcoming(res?.upcoming || res?.events || res?.data?.upcoming || []);
+        setWeeklyLineup(res?.weekly_lineup || res?.weeklyLineup || res?.data?.weekly_lineup || []);
+      } catch (err) {
+        if (mounted) {
+          setError(err.message || "Failed to load events.");
+        }
+      } finally {
+        if (mounted) {
+          setLoading(false);
+        }
+      }
+    }
+
+    loadEvents();
+    return () => {
+      mounted = false;
+    };
+  }, [activeCategory]);
+
+  const sortedLineup = useMemo(() => weeklyLineup || [], [weeklyLineup]);
+
+  const runEventAction = async (eventId, mode) => {
+    const key = `${eventId}-${mode}`;
+    setActionLoading((prev) => ({ ...prev, [key]: true }));
+    setError("");
+
+    try {
+      const endpoint =
+        mode === "waitlist" ? `/events/${eventId}/waitlist` : `/events/${eventId}/reserve`;
+      const res = await api.post(endpoint, {});
+      const updatedEvent = res?.event || res?.data?.event;
+
+      if (updatedEvent) {
+        setUpcoming((prev) =>
+          prev.map((item) => (item.id === eventId ? { ...item, ...updatedEvent } : item))
+        );
+      }
+    } catch (err) {
+      setError(err.message || "Unable to update registration.");
+    } finally {
+      setActionLoading((prev) => ({ ...prev, [key]: false }));
+    }
+  };
+
   return (
     <>
       <Header
         title="Events"
-        subtitle="Discover upcoming wellness events and workshops."
+        subtitle="Register for workshops, masterclasses, and community circles."
       />
-      <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
-        <div className="xl:col-span-2 space-y-4">
-          {events.map((event) => (
+
+      {error && (
+        <div className="mb-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+          {error}
+        </div>
+      )}
+
+      {loading ? (
+        <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+          {Array.from({ length: 6 }).map((_, idx) => (
             <div
-              key={event.id}
-              className="bg-white rounded-3xl border border-gray-200 p-6 shadow-sm hover:shadow-md transition-shadow"
-            >
-              <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
-                <div className="flex gap-4">
-                  <div className="w-12 h-12 rounded-2xl bg-emerald-50 flex items-center justify-center text-emerald-600 font-semibold text-sm flex-shrink-0">
-                    <div className="text-center leading-tight">
-                      <div className="text-[10px] uppercase tracking-wide">
-                        {event.date.split(" ")[1]}
-                      </div>
-                      <div className="text-xs font-bold">
-                        {event.date.split(" ")[0]}
-                      </div>
-                    </div>
-                  </div>
-                  <div>
-                    <div className="flex items-center gap-2 mb-1">
-                      <h2 className="text-base sm:text-lg font-semibold text-gray-900">
-                        {event.title}
-                      </h2>
-                      <span className="inline-flex items-center rounded-full bg-emerald-50 px-2 py-0.5 text-[11px] font-medium text-emerald-700">
-                        {event.type}
-                      </span>
-                    </div>
-                    <p className="text-sm text-gray-600 mb-3">
-                      {event.description}
-                    </p>
-                    <div className="flex flex-wrap gap-3 text-xs sm:text-sm text-gray-600">
-                      <span className="flex items-center gap-1.5">
-                        <svg
-                          className="w-4 h-4"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                          stroke="currentColor"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-                          />
-                        </svg>
-                        {event.date} · {event.time}
-                      </span>
-                      <span className="flex items-center gap-1.5">
-                        <svg
-                          className="w-4 h-4"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                          stroke="currentColor"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M12 2C8.13401 2 5 5.13401 5 9C5 14.25 12 22 12 22C12 22 19 14.25 19 9C19 5.13401 15.866 2 12 2Z"
-                          />
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M12 11.5C13.3807 11.5 14.5 10.3807 14.5 9C14.5 7.61929 13.3807 6.5 12 6.5C10.6193 6.5 9.5 7.61929 9.5 9C9.5 10.3807 10.6193 11.5 12 11.5Z"
-                          />
-                        </svg>
-                        {event.location}
-                      </span>
-                      <span className="flex items-center gap-1.5">
-                        <svg
-                          className="w-4 h-4"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                          stroke="currentColor"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M5 13l4 4L19 7"
-                          />
-                        </svg>
-                        {event.tag}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-                <div className="flex flex-col items-stretch gap-2 w-full md:w-40">
-                  <button className="w-full py-2.5 rounded-lg bg-emerald-600 text-white text-sm font-medium hover:bg-emerald-700 transition-colors">
-                    Register
-                  </button>
-                  <button className="w-full py-2.5 rounded-lg bg-gray-50 text-gray-700 text-sm font-medium border border-gray-200 hover:bg-gray-100 transition-colors">
-                    Add to calendar
-                  </button>
-                </div>
-              </div>
-            </div>
+              key={idx}
+              className="h-32 animate-pulse rounded-3xl border border-gray-200 bg-gray-100"
+            />
           ))}
         </div>
+      ) : (
+        <div className="space-y-6">
+          {featured && (
+            <div className="rounded-2xl border border-emerald-200 bg-gradient-to-r from-emerald-50 to-cyan-50 p-5 shadow-sm">
+              <p className="text-xs font-semibold uppercase tracking-wide text-emerald-700">
+                Featured Event
+              </p>
+              <h2 className="mt-1 text-xl font-bold text-gray-800">{featured.title}</h2>
+              <p className="mt-1 text-sm text-gray-600">
+                {featured.date} • {featured.time} • {featured.mode}
+              </p>
+              <p className="mt-2 text-sm text-gray-700">{featured.description}</p>
+            </div>
+          )}
 
-        <div className="space-y-4">
-          <div className="bg-white rounded-3xl border border-gray-200 p-5 shadow-sm">
-            <h3 className="text-sm font-semibold text-gray-800 mb-3">
-              Today&apos;s vibe
-            </h3>
-            <p className="text-sm text-gray-600 mb-3">
-              Small steps like attending one session or morning exercise can
-              significantly lift your mood.
-            </p>
-            <ul className="space-y-2 text-sm text-gray-600">
-              <li className="flex items-center gap-2">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                Bring a friend along for more comfort.
-              </li>
-              <li className="flex items-center gap-2">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                You can just listen; sharing is always optional.
-              </li>
-            </ul>
+          <div className="flex flex-wrap gap-2">
+            {categoryTabs.map((tab) => (
+              <button
+                key={tab.id}
+                type="button"
+                onClick={() => setActiveCategory(tab.id)}
+                className={`rounded-full px-4 py-2 text-sm font-medium transition-colors ${
+                  activeCategory === tab.id
+                    ? "bg-emerald-600 text-white"
+                    : "border border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
+                }`}
+              >
+                {tab.label}
+              </button>
+            ))}
           </div>
 
-          <div className="bg-emerald-600 rounded-3xl p-5 text-white shadow-sm">
-            <p className="text-sm font-medium mb-2">Reminder</p>
-            <p className="text-sm opacity-90 mb-4">
-              If you are feeling overwhelmed, you can directly book a private
-              appointment from the Appointments tab.
-            </p>
-            <p className="text-xs text-emerald-100">
-              Your participation in events and sessions remains confidential
-              within the campus wellness team.
-            </p>
+          <div className="grid grid-cols-1 gap-6 lg:grid-cols-5">
+            <div className="space-y-4 lg:col-span-3">
+              {upcoming.map((event) => (
+                <div
+                  key={event.id}
+                  className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm"
+                >
+                  <div className="mb-2 flex flex-wrap items-start justify-between gap-2">
+                    <div>
+                      <h3 className="text-base font-semibold text-gray-900">{event.title}</h3>
+                      <p className="text-sm text-gray-500">
+                        {event.date} • {event.time}
+                      </p>
+                      <p className="text-xs text-gray-500">
+                        Host: {event.host} • Mode: {event.mode}
+                      </p>
+                    </div>
+                    <span className="rounded-full bg-emerald-100 px-2 py-1 text-xs font-semibold text-emerald-700">
+                      {event.category_label || event.type || "Event"}
+                    </span>
+                  </div>
+
+                  <div className="mb-3 text-sm text-gray-600">
+                    Seats: {event.attendees}/{event.capacity}
+                  </div>
+
+                  <div className="flex flex-wrap gap-2">
+                    <button
+                      type="button"
+                      onClick={() => runEventAction(event.id, "reserve")}
+                      disabled={actionLoading[`${event.id}-reserve`]}
+                      className="rounded-lg bg-emerald-600 px-3 py-2 text-xs font-medium text-white hover:bg-emerald-700 disabled:opacity-60"
+                    >
+                      {actionLoading[`${event.id}-reserve`] ? "Saving..." : "Reserve Spot"}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => runEventAction(event.id, "waitlist")}
+                      disabled={actionLoading[`${event.id}-waitlist`]}
+                      className="rounded-lg border border-gray-300 px-3 py-2 text-xs font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-60"
+                    >
+                      {actionLoading[`${event.id}-waitlist`] ? "Saving..." : "Join Waitlist"}
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div className="space-y-4 lg:col-span-2">
+              <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
+                <h3 className="mb-3 text-lg font-semibold text-gray-800">Weekly Lineup</h3>
+                <div className="space-y-2">
+                  {sortedLineup.map((item) => (
+                    <div
+                      key={item.id}
+                      className="rounded-lg border border-gray-100 bg-gray-50 px-3 py-2"
+                    >
+                      <p className="text-sm font-medium text-gray-800">{item.topic}</p>
+                      <p className="text-xs text-gray-500">
+                        {item.day} • {item.time}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="rounded-2xl bg-emerald-600 p-5 text-white shadow-sm">
+                <p className="text-sm font-semibold">Privacy Reminder</p>
+                <p className="mt-2 text-sm text-emerald-100">
+                  Participation details remain visible only within the wellness support team.
+                </p>
+              </div>
+            </div>
           </div>
         </div>
-      </div>
+      )}
     </>
   );
 }

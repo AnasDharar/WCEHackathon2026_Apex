@@ -1,228 +1,228 @@
 "use client";
-import { useState } from "react";
-import { useRouter } from "next/navigation";
-import { auth, db } from "../../../firebaseConfig"; 
-import { doc, updateDoc } from "firebase/firestore"; 
 
-const TestPage = () => {
+import { useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
+import { doc, setDoc } from "firebase/firestore";
+
+import { auth, db } from "../../../firebaseConfig";
+import { api } from "@/lib/api";
+
+const TEST_ORDER = ["phq9", "gad7"];
+
+function createEmptyAnswers(catalog) {
+  const initial = {};
+  for (const test of catalog) {
+    initial[test.id] = Array.from({ length: test.questions.length }, () => null);
+  }
+  return initial;
+}
+
+export default function TestPage() {
   const router = useRouter();
+  const [catalog, setCatalog] = useState([]);
+  const [answers, setAnswers] = useState({});
+  const [loadingCatalog, setLoadingCatalog] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const user = auth.currentUser;
   const [error, setError] = useState("");
 
-  // Raw state holding the 1-5 Likert values and boolean answers
-  const [answers, setAnswers] = useState({
-    // 1-5 Scale Questions (0 means unanswered)
-    q_mood1: 0, q_mood2: 0,
-    q_stress1: 0, q_stress2: 0,
-    q_anx1: 0, q_anx2: 0,
-    q_sleep: 0,
-    q_energy: 0,
-    q_screentime: 0,
-    // Boolean Behavioral Checks
-    exercise: null,
-    social: null,
-    productive: null,
-    self_care: null,
-    // Text
-    journal: ""
-  });
+  useEffect(() => {
+    let mounted = true;
 
-  const handleLikertChange = (questionId, value) => {
-    setAnswers(prev => ({ ...prev, [questionId]: value }));
-  };
+    async function loadCatalog() {
+      setLoadingCatalog(true);
+      setError("");
+      try {
+        const response = await api.get("/assessments/catalog");
+        const rawCatalog = Array.isArray(response?.data) ? response.data : [];
+        const orderedCatalog = TEST_ORDER.map((testId) =>
+          rawCatalog.find((item) => item?.id === testId)
+        ).filter(Boolean);
 
-  const handleBooleanChange = (questionId, value) => {
-    setAnswers(prev => ({ ...prev, [questionId]: value }));
-  };
+        if (orderedCatalog.length !== TEST_ORDER.length) {
+          throw new Error("Assessment catalog is not available right now.");
+        }
 
-  const calculateResults = () => {
-    // Math logic to translate 1-5 scales into your exact JSON schema
-    const mapQuality = (val) => val <= 2 ? "Poor" : val === 3 ? "Fair" : "Good";
-    const mapLevel = (val) => val <= 2 ? "Low" : val === 3 ? "Medium" : "High";
-    const mapScreen = (val) => val <= 2 ? "Low" : val === 3 ? "Normal" : "High";
+        if (!mounted) {
+          return;
+        }
 
-    return {
-      mood: answers.q_mood1 + answers.q_mood2,         // (1-5) + (1-5) = 2 to 10
-      stress: answers.q_stress1 + answers.q_stress2,     // (1-5) + (1-5) = 2 to 10
-      anxiety: answers.q_anx1 + answers.q_anx2,          // (1-5) + (1-5) = 2 to 10
-      sleep_quality: mapQuality(answers.q_sleep),
-      energy: mapLevel(answers.q_energy),
-      exercise: answers.exercise || false,
-      social: answers.social || false,
-      productive: answers.productive || false,
-      screen_time: mapScreen(answers.q_screentime),
-      self_care: answers.self_care || false,
-      journal: answers.journal
+        setCatalog(orderedCatalog);
+        setAnswers(createEmptyAnswers(orderedCatalog));
+      } catch (err) {
+        if (mounted) {
+          setError(err.message || "Failed to load assessments.");
+        }
+      } finally {
+        if (mounted) {
+          setLoadingCatalog(false);
+        }
+      }
+    }
+
+    loadCatalog();
+    return () => {
+      mounted = false;
     };
+  }, []);
+
+  const progress = useMemo(() => {
+    const totalQuestions = catalog.reduce((sum, test) => sum + test.questions.length, 0);
+    const answeredQuestions = catalog.reduce((sum, test) => {
+      const testAnswers = answers[test.id] || [];
+      return sum + testAnswers.filter((value) => value !== null).length;
+    }, 0);
+    return { answeredQuestions, totalQuestions };
+  }, [answers, catalog]);
+
+  const handleAnswerChange = (testId, questionIndex, value) => {
+    setAnswers((previous) => {
+      const next = { ...previous };
+      const previousAnswers = Array.isArray(next[testId]) ? [...next[testId]] : [];
+      previousAnswers[questionIndex] = value;
+      next[testId] = previousAnswers;
+      return next;
+    });
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setError("");
-    const user = auth.currentUser;
-    
-    // Basic Validation: Ensure all Likert and Boolean questions are answered
-    const isComplete = Object.entries(answers).every(([key, val]) => {
-      if (key === 'journal') return true; // Optional
-      return val !== 0 && val !== null;
+  const isComplete = () =>
+    catalog.every((test) => {
+      const testAnswers = answers[test.id] || [];
+      return (
+        testAnswers.length === test.questions.length &&
+        testAnswers.every((value) => Number.isInteger(value))
+      );
     });
 
-    if (!isComplete) {
-      setError("Please answer all questions to complete your assessment.");
-      // Scroll to top to see error
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+    setError("");
+
+    const user = auth.currentUser;
+    if (!user) {
+      setError("Session expired. Please sign in again.");
+      return;
+    }
+
+    if (!isComplete()) {
+      setError("Please answer every question in PHQ-9 and GAD-7.");
       window.scrollTo({ top: 0, behavior: "smooth" });
       return;
     }
 
     setIsSubmitting(true);
 
-    const compiledData = calculateResults();
-    const payload = { uid: user.uid, responses: compiledData };
-
     try {
-      const response = await fetch("http://localhost:8000/api/v1/recommend-resources", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
+      const submissions = TEST_ORDER.map((testId) => ({
+        test_id: testId,
+        answers: answers[testId],
+      }));
+
+      const result = await api.post("/assessments/submit", {
+        submissions,
+        max_recommendations: 5,
       });
 
-      if (!response.ok) throw new Error("Failed to analyze assessment");
-
-      // Mark test as completed in Firestore
       const userRef = doc(db, "users", user.uid);
-      await updateDoc(userRef, { testGiven: true });
+      await setDoc(
+        userRef,
+        {
+          testGiven: true,
+          latestAssessment: result,
+          lastTestDate: new Date().toISOString(),
+        },
+        { merge: true }
+      );
 
       router.push("/home");
     } catch (err) {
-      console.error(err);
-      setError("Failed to submit assessment. Please try again.");
+      setError(err.message || "Failed to submit assessment. Please try again.");
     } finally {
       setIsSubmitting(false);
     }
-    // 3. Save the results and mark test as completed in Firestore
-      const userRef = doc(db, "users", user.uid);
-      
-      await updateDoc(userRef, { 
-        testGiven: true,
-        // Save the actual test results under a new object
-        latestAssessment: compiledData,
-        // Optional: save the exact time they took it
-        lastTestDate: new Date().toISOString() 
-      });
   };
 
-  // Reusable UI Component for Likert Scale Questions
-  const LikertQuestion = ({ id, text }) => {
-    const options = [
-      { val: 1, label: "Strongly Disagree" },
-      { val: 2, label: "Disagree" },
-      { val: 3, label: "Neutral" },
-      { val: 4, label: "Agree" },
-      { val: 5, label: "Strongly Agree" }
-    ];
-
+  if (loadingCatalog) {
     return (
-      <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm mb-4">
-        <p className="font-medium text-gray-800 mb-4">{text}</p>
-        <div className="grid grid-cols-5 gap-2">
-          {options.map((opt) => (
-            <button
-              type="button"
-              key={opt.val}
-              onClick={() => handleLikertChange(id, opt.val)}
-              className={`flex flex-col items-center justify-center p-3 rounded-lg border text-sm transition-all ${
-                answers[id] === opt.val 
-                  ? "bg-blue-50 border-blue-500 text-blue-700 font-semibold" 
-                  : "bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100"
-              }`}
-            >
-              <span className="md:hidden">{opt.val}</span>
-              <span className="hidden md:block text-xs text-center">{opt.label}</span>
-            </button>
-          ))}
+      <div className="min-h-screen bg-gray-100 px-4 py-10 font-google">
+        <div className="mx-auto max-w-3xl rounded-2xl border border-gray-200 bg-white p-8 shadow-sm">
+          <p className="text-center text-gray-600">Loading PHQ-9 and GAD-7...</p>
         </div>
       </div>
     );
-  };
-
-  // Reusable UI Component for Yes/No Questions
-  const BinaryQuestion = ({ id, text }) => (
-    <div className="flex justify-between items-center bg-white p-5 rounded-xl border border-gray-200 shadow-sm mb-4">
-      <p className="font-medium text-gray-800 w-2/3">{text}</p>
-      <div className="flex gap-2 w-1/3 justify-end">
-        <button
-          type="button"
-          onClick={() => handleBooleanChange(id, true)}
-          className={`px-6 py-2 rounded-lg border transition-all ${
-            answers[id] === true ? "bg-green-50 border-green-500 text-green-700" : "bg-gray-50 border-gray-200 text-gray-600"
-          }`}
-        >
-          Yes
-        </button>
-        <button
-          type="button"
-          onClick={() => handleBooleanChange(id, false)}
-          className={`px-6 py-2 rounded-lg border transition-all ${
-            answers[id] === false ? "bg-red-50 border-red-500 text-red-700" : "bg-gray-50 border-gray-200 text-gray-600"
-          }`}
-        >
-          No
-        </button>
-      </div>
-    </div>
-  );
+  }
 
   return (
-    <div className="min-h-screen bg-gray-100 py-10 px-4 font-google">
-      <div className="max-w-3xl mx-auto">
-        
-        <div className="mb-8 text-center">
-          <h1 className="text-3xl font-bold text-gray-800 mb-2">Initial Assessment</h1>
-          <p className="text-gray-600">Please indicate how much you agree with the following statements based on your recent experiences.</p>
+    <div className="min-h-screen bg-gray-100 px-4 py-10 font-google">
+      <div className="mx-auto max-w-3xl">
+        <div className="mb-8 rounded-2xl border border-gray-200 bg-white p-6 text-center shadow-sm">
+          <h1 className="text-3xl font-bold text-gray-800">Mental Health Assessment</h1>
+          <p className="mt-2 text-gray-600">
+            Please answer all questions based on your experience over the last 2 weeks.
+          </p>
+          <p className="mt-3 text-sm font-medium text-gray-500">
+            Progress: {progress.answeredQuestions}/{progress.totalQuestions}
+          </p>
         </div>
 
         {error && (
-          <div className="mb-6 p-4 bg-red-100 border border-red-400 text-red-700 rounded-xl font-medium">
+          <div className="mb-6 rounded-xl border border-red-300 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">
             {error}
           </div>
         )}
 
-        <form onSubmit={handleSubmit}>
-          
-          <h2 className="text-xl font-semibold text-gray-700 mb-4 mt-8">Section 1: Mental & Emotional State</h2>
-          <LikertQuestion id="q_mood1" text="I generally feel optimistic and hopeful about the future." />
-          <LikertQuestion id="q_mood2" text="I find joy and pleasure in my daily activities." />
-          
-          <LikertQuestion id="q_stress1" text="I frequently feel overwhelmed by my responsibilities." />
-          <LikertQuestion id="q_stress2" text="I find it difficult to relax and unwind after a long day." />
-          
-          <LikertQuestion id="q_anx1" text="I often feel nervous, anxious, or on edge." />
-          <LikertQuestion id="q_anx2" text="I have trouble stopping or controlling my worrying." />
+        <form onSubmit={handleSubmit} className="space-y-6">
+          {catalog.map((test) => (
+            <section
+              key={test.id}
+              className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm"
+            >
+              <div className="mb-5">
+                <h2 className="text-xl font-semibold text-gray-800">{test.title}</h2>
+                <p className="mt-1 text-sm text-gray-500">
+                  {test.use} | {test.duration}
+                </p>
+              </div>
 
-          <h2 className="text-xl font-semibold text-gray-700 mb-4 mt-8">Section 2: Physical Wellbeing</h2>
-          <LikertQuestion id="q_sleep" text="I wake up feeling rested and refreshed most days." />
-          <LikertQuestion id="q_energy" text="I have sufficient energy to complete my daily tasks." />
-          <LikertQuestion id="q_screentime" text="I spend an excessive amount of time mindlessly looking at screens." />
+              <div className="space-y-4">
+                {test.questions.map((question, questionIndex) => (
+                  <div key={question.id} className="rounded-xl border border-gray-200 bg-gray-50 p-4">
+                    <p className="mb-3 text-sm font-medium text-gray-800">
+                      {questionIndex + 1}. {question.text}
+                    </p>
 
-          <h2 className="text-xl font-semibold text-gray-700 mb-4 mt-8">Section 3: Behavioral Check-in</h2>
-          <BinaryQuestion id="exercise" text="Did you engage in at least 20 minutes of physical activity recently?" />
-          <BinaryQuestion id="social" text="Have you had a meaningful conversation with a friend or family member today?" />
-          <BinaryQuestion id="productive" text="Were you able to focus and complete your necessary tasks today?" />
-          <BinaryQuestion id="self_care" text="Did you set aside dedicated time for yourself to do something you enjoy?" />
+                    <div className="grid grid-cols-2 gap-2 md:grid-cols-4">
+                      {test.options.map((option) => (
+                        <button
+                          key={option.value}
+                          type="button"
+                          onClick={() =>
+                            handleAnswerChange(test.id, questionIndex, option.value)
+                          }
+                          className={`rounded-lg border px-3 py-2 text-xs transition-colors md:text-sm ${
+                            answers[test.id]?.[questionIndex] === option.value
+                              ? "border-blue-500 bg-blue-50 font-semibold text-blue-700"
+                              : "border-gray-200 bg-white text-gray-600 hover:bg-gray-100"
+                          }`}
+                        >
+                          {option.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </section>
+          ))}
 
-          <button 
-            type="submit" 
+          <button
+            type="submit"
             disabled={isSubmitting}
-            className="w-full bg-blue-600 text-white font-bold py-4 rounded-xl hover:bg-blue-700 disabled:opacity-50 transition-colors text-lg shadow-md"
+            className="w-full rounded-xl bg-blue-600 py-4 text-lg font-bold text-white transition-colors hover:bg-blue-700 disabled:opacity-60"
           >
-            {isSubmitting ? "Processing..." : "Complete Assessment"}
+            {isSubmitting ? "Submitting..." : "Submit PHQ-9 + GAD-7"}
           </button>
         </form>
-
       </div>
     </div>
   );
-};
-
-export default TestPage;
+}

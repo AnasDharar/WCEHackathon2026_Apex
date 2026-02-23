@@ -1,321 +1,546 @@
 "use client";
-import { useState } from "react";
+
+import { useEffect, useMemo, useState } from "react";
+
 import Header from "@/components/Header";
-import { motion } from "motion/react";
 import { useNotification } from "@/context/NotificationContext";
+import { api } from "@/lib/api";
+import { getUserSession } from "@/lib/userSession";
 
-// Mock Data
-const counselors = [
-  {
-    id: 1,
-    name: "Dr. Sarah Wilson",
-    specialty: "Clinical Psychologist",
-    experience: "10+ years",
-    languages: ["English", "Hindi"],
-    availability: ["Mon", "Wed", "Fri"],
-    image: "https://api.dicebear.com/7.x/avataaars/svg?seed=Sarah",
-    rating: 4.9,
-  },
-  {
-    id: 2,
-    name: "Mr. Rajesh Kumar",
-    specialty: "Student Counselor",
-    experience: "5+ years",
-    languages: ["Hindi", "Marathi", "English"],
-    availability: ["Tue", "Thu", "Sat"],
-    image: "https://api.dicebear.com/7.x/avataaars/svg?seed=Rajesh",
-    rating: 4.8,
-  },
-  {
-    id: 3,
-    name: "Ms. Priya Desai",
-    specialty: "Wellness Coach",
-    experience: "7+ years",
-    languages: ["English", "Gujarati"],
-    availability: ["Mon", "Tue", "Thu"],
-    image: "https://api.dicebear.com/7.x/avataaars/svg?seed=Priya",
-    rating: 4.7,
-  },
+const bookingModes = ["Online", "In-person", "Video Session", "Audio Session"];
+const statThemes = [
+  "from-emerald-500 to-emerald-600",
+  "from-blue-500 to-cyan-500",
+  "from-amber-500 to-orange-500",
 ];
 
-const upcomingAppointments = [
-  {
-    id: 101,
-    counselorId: 1,
-    date: "2026-02-25",
-    time: "10:00 AM",
-    type: "Online",
-    status: "Confirmed",
-  },
-];
+const modeBadges = {
+  Online: "bg-emerald-50 text-emerald-700 border-emerald-200",
+  "Video Session": "bg-emerald-50 text-emerald-700 border-emerald-200",
+  "Audio Session": "bg-sky-50 text-sky-700 border-sky-200",
+  "In-person": "bg-amber-50 text-amber-700 border-amber-200",
+};
+
+function counselorInitials(name) {
+  return String(name || "")
+    .split(" ")
+    .filter(Boolean)
+    .map((part) => part.charAt(0))
+    .join("")
+    .slice(0, 2)
+    .toUpperCase();
+}
 
 export default function Appointments() {
-  const [selectedCounselor, setSelectedCounselor] = useState(null);
-  const [bookingStep, setBookingStep] = useState(1); // 1: Select Date/Time, 2: Privacy/Confirm
-  const [bookingData, setBookingData] = useState({
-    date: "",
-    time: "",
-    type: "Online", 
-  });
-  const [languageFilter, setLanguageFilter] = useState("All");
-
   const { addNotification } = useNotification() || { addNotification: () => {} };
 
-  const filteredCounselors = languageFilter === "All" 
-    ? counselors 
-    : counselors.filter(c => c.languages.includes(languageFilter));
+  const [currentUser, setCurrentUser] = useState(null);
+  const [stats, setStats] = useState([]);
+  const [counselors, setCounselors] = useState([]);
+  const [upcoming, setUpcoming] = useState([]);
+  const [openSlots, setOpenSlots] = useState([]);
+  const [prepChecklist, setPrepChecklist] = useState([]);
 
-  const uniqueLanguages = ["All", ...new Set(counselors.flatMap(c => c.languages))];
+  const [languageFilter, setLanguageFilter] = useState("All");
+  const [selectedCounselor, setSelectedCounselor] = useState(null);
+  const [bookingData, setBookingData] = useState({
+    preferred_slot: "",
+    mode: "Online",
+    location: "",
+    notes: "",
+  });
+  const [rescheduleSelection, setRescheduleSelection] = useState({});
 
-  const handleBookClick = (counselor) => {
-    setSelectedCounselor(counselor);
-    setBookingStep(1);
-    setBookingData({ date: "", time: "", type: "Online" });
+  const [loading, setLoading] = useState(true);
+  const [booking, setBooking] = useState(false);
+  const [reschedulingId, setReschedulingId] = useState(null);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    setCurrentUser(getUserSession());
+  }, []);
+
+  useEffect(() => {
+    let mounted = true;
+
+    async function loadInitial() {
+      setLoading(true);
+      setError("");
+      try {
+        const [statsRes, counselorRes, upcomingRes, slotsRes, checklistRes] = await Promise.all([
+          api.get("/appointments/stats"),
+          api.get("/appointments/counselors"),
+          api.get("/appointments/upcoming"),
+          api.get("/appointments/open-slots"),
+          api.get("/appointments/prep-checklist"),
+        ]);
+
+        if (!mounted) {
+          return;
+        }
+
+        setStats(statsRes?.data || []);
+        setCounselors(counselorRes?.data || []);
+        setUpcoming(upcomingRes?.data || []);
+        setOpenSlots(slotsRes?.data || []);
+        setPrepChecklist(checklistRes?.data || []);
+      } catch (err) {
+        if (mounted) {
+          setError(err.message || "Failed to load appointments.");
+        }
+      } finally {
+        if (mounted) {
+          setLoading(false);
+        }
+      }
+    }
+
+    loadInitial();
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
+  const languages = useMemo(() => {
+    const langSet = new Set();
+    counselors.forEach((item) => (item.languages || []).forEach((lang) => langSet.add(lang)));
+    return ["All", ...Array.from(langSet)];
+  }, [counselors]);
+
+  const filteredCounselors = useMemo(() => {
+    if (languageFilter === "All") {
+      return counselors;
+    }
+    return counselors.filter((item) =>
+      (item.languages || []).some((lang) => lang.toLowerCase() === languageFilter.toLowerCase())
+    );
+  }, [counselors, languageFilter]);
+
+  const nextAppointment = useMemo(() => upcoming[0] || null, [upcoming]);
+
+  const refreshAppointmentsData = async () => {
+    const [statsRes, upcomingRes, slotsRes] = await Promise.all([
+      api.get("/appointments/stats"),
+      api.get("/appointments/upcoming"),
+      api.get("/appointments/open-slots"),
+    ]);
+    setStats(statsRes?.data || []);
+    setUpcoming(upcomingRes?.data || []);
+    setOpenSlots(slotsRes?.data || []);
   };
 
-  const handleConfirmBooking = () => {
+  const bookAppointment = async () => {
     if (!selectedCounselor) {
-      alert("Please select a counselor before confirming the appointment.");
+      setError("Select a counselor first.");
+      return;
+    }
+    if (!bookingData.preferred_slot) {
+      setError("Please choose a preferred slot.");
       return;
     }
 
-    addNotification({
-      title: "Appointment Booked",
-      message: `Your session with ${selectedCounselor.name} is confirmed for ${bookingData.date} at ${bookingData.time}.`,
-      type: "success",
-    });
+    setBooking(true);
+    setError("");
+    try {
+      const payload = {
+        counselor_id: selectedCounselor.id,
+        preferred_slot: bookingData.preferred_slot,
+        mode: bookingData.mode,
+        location: bookingData.location || null,
+        notes: bookingData.notes || null,
+      };
+      const res = await api.post("/appointments/book", payload);
+      const appointment = res?.appointment;
 
-    alert("Booking Confirmed!");
-    setSelectedCounselor(null);
+      addNotification({
+        title: "Appointment Booked",
+        message: `Session with ${appointment?.doctor || selectedCounselor.name} scheduled for ${appointment?.date} at ${appointment?.time}.`,
+      });
+
+      setSelectedCounselor(null);
+      setBookingData({ preferred_slot: "", mode: "Online", location: "", notes: "" });
+      await refreshAppointmentsData();
+    } catch (err) {
+      setError(err.message || "Failed to book appointment.");
+    } finally {
+      setBooking(false);
+    }
+  };
+
+  const rescheduleAppointment = async (appointmentId) => {
+    const preferred_slot = rescheduleSelection[appointmentId];
+    if (!preferred_slot) {
+      setError("Select a slot before rescheduling.");
+      return;
+    }
+
+    setReschedulingId(appointmentId);
+    setError("");
+    try {
+      const res = await api.post(`/appointments/${appointmentId}/reschedule`, {
+        preferred_slot,
+      });
+
+      addNotification({
+        title: "Appointment Rescheduled",
+        message: `${res?.appointment?.doctor || "Session"} moved to ${res?.appointment?.date} at ${res?.appointment?.time}.`,
+      });
+
+      await refreshAppointmentsData();
+    } catch (err) {
+      setError(err.message || "Failed to reschedule.");
+    } finally {
+      setReschedulingId(null);
+    }
   };
 
   return (
     <>
       <Header
         title="Appointments"
-        subtitle="Confidential and secure booking with trusted professionals."
+        subtitle={`${
+          currentUser?.first_name ? `${currentUser.first_name}, ` : ""
+        }book confidential sessions, track upcoming appointments, and reschedule quickly.`}
       />
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Left Column: Counselor List */}
-        <div className="lg:col-span-2 space-y-6">
-          <div className="flex justify-between items-center">
-            <h2 className="text-xl font-semibold text-gray-800 flex items-center gap-2">
-              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-emerald-600"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-              Available Counselors
-            </h2>
-            <select 
-              value={languageFilter}
-              onChange={(e) => setLanguageFilter(e.target.value)}
-              className="p-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500 outline-none"
-            >
-              {uniqueLanguages.map(lang => (
-                <option key={lang} value={lang}>{lang}</option>
-              ))}
-            </select>
-          </div>
-          <div className="grid gap-4">
-            {filteredCounselors.map((counselor) => (
-              <motion.div
-                key={counselor.id}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                whileHover={{ scale: 1.01 }}
-                className={`bg-white p-6 rounded-xl border transition-all cursor-pointer flex flex-col md:flex-row gap-6 items-start md:items-center ${
-                  selectedCounselor?.id === counselor.id
-                    ? "border-emerald-500 ring-1 ring-emerald-500 shadow-md"
-                    : "border-gray-100 hover:border-emerald-200 shadow-sm"
-                }`}
-                onClick={() => handleBookClick(counselor)}
-              >
-                <img
-                  src={counselor.image}
-                  alt={counselor.name}
-                  className="w-16 h-16 rounded-full bg-gray-50"
-                />
-                <div className="flex-1">
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <h3 className="text-lg font-bold text-gray-900">{counselor.name}</h3>
-                      <p className="text-emerald-600 font-medium">{counselor.specialty}</p>
-                    </div>
-                    <div className="flex items-center gap-1 bg-amber-50 px-2 py-1 rounded text-amber-700 text-sm font-bold">
-                      <span>★</span> {counselor.rating}
-                    </div>
-                  </div>
-                  <div className="mt-3 flex flex-wrap gap-3 text-sm text-gray-500">
-                    <span className="flex items-center gap-1">
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-                      {counselor.experience} Exp
-                    </span>
-                    <span className="flex items-center gap-1">
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
-                      {counselor.languages.join(", ")}
-                    </span>
-                  </div>
-                </div>
-                <button className="px-5 py-2 rounded-lg bg-gray-50 text-gray-700 font-medium hover:bg-emerald-50 hover:text-emerald-700 transition-colors whitespace-nowrap">
-                  Book Now
-                </button>
-              </motion.div>
-            ))}
-          </div>
+      {error && (
+        <div className="mb-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+          {error}
         </div>
+      )}
 
-        {/* Right Column: Booking Panel or Upcoming */}
+      {loading ? (
+        <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+          {Array.from({ length: 6 }).map((_, idx) => (
+            <div
+              key={idx}
+              className="h-40 animate-pulse rounded-3xl border border-gray-200 bg-gray-100"
+            />
+          ))}
+        </div>
+      ) : (
         <div className="space-y-6">
-          {selectedCounselor ? (
-            <motion.div
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              className="bg-white p-6 rounded-xl border border-gray-200 shadow-lg sticky top-6"
-            >
-              <div className="flex justify-between items-center mb-6">
-                <h3 className="text-lg font-bold text-gray-800">Book Appointment</h3>
-                <button
-                  onClick={() => setSelectedCounselor(null)}
-                  className="text-gray-400 hover:text-gray-600"
-                >
-                  ✕
-                </button>
+          <section className="relative overflow-hidden rounded-3xl border border-emerald-200 bg-gradient-to-r from-emerald-50 via-white to-cyan-50 p-6 shadow-sm">
+            <div className="pointer-events-none absolute -right-20 -top-20 h-48 w-48 rounded-full bg-emerald-200/40 blur-3xl" />
+            <div className="pointer-events-none absolute -left-20 -bottom-20 h-48 w-48 rounded-full bg-cyan-200/30 blur-3xl" />
+
+            <div className="relative grid grid-cols-1 gap-4 lg:grid-cols-3">
+              <div className="lg:col-span-2">
+                <p className="mb-2 inline-flex rounded-full bg-white/70 px-3 py-1 text-xs font-semibold text-emerald-700">
+                  Session Center
+                </p>
+                <h2 className="text-2xl font-semibold text-gray-900">
+                  {nextAppointment ? "Your next session is ready" : "Plan your next wellness session"}
+                </h2>
+                <p className="mt-2 max-w-xl text-sm text-gray-600">
+                  Choose a counselor, confirm a slot, and keep your appointments organized in one place.
+                </p>
+
+                {nextAppointment && (
+                  <div className="mt-4 inline-flex flex-wrap items-center gap-2 rounded-xl border border-emerald-200 bg-white px-3 py-2 text-sm text-gray-700">
+                    <span className="font-semibold text-gray-900">{nextAppointment.doctor}</span>
+                    <span>{nextAppointment.date}</span>
+                    <span>{nextAppointment.time}</span>
+                    <span
+                      className={`rounded-full border px-2 py-0.5 text-xs font-medium ${
+                        modeBadges[nextAppointment.mode] || "border-gray-200 bg-gray-50 text-gray-700"
+                      }`}
+                    >
+                      {nextAppointment.mode}
+                    </span>
+                  </div>
+                )}
               </div>
 
-              {bookingStep === 1 && (
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Select Date</label>
-                    <input
-                      type="date"
-                      className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none"
-                      onChange={(e) => setBookingData({ ...bookingData, date: e.target.value })}
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Select Time</label>
-                    <select
-                      className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none"
-                      onChange={(e) => setBookingData({ ...bookingData, time: e.target.value })}
-                    >
-                      <option value="">Choose a slot...</option>
-                      <option value="09:00">09:00 AM</option>
-                      <option value="10:00">10:00 AM</option>
-                      <option value="11:00">11:00 AM</option>
-                      <option value="14:00">02:00 PM</option>
-                      <option value="15:00">03:00 PM</option>
-                    </select>
-                  </div>
-                  <button
-                    onClick={() => setBookingStep(2)}
-                    disabled={!bookingData.date || !bookingData.time}
-                    className="w-full py-3 bg-emerald-600 text-white rounded-lg font-medium hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed mt-4"
-                  >
-                    Next: Privacy Options
-                  </button>
-                </div>
-              )}
-
-              {bookingStep === 2 && (
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-3">Where do you want to meet?</label>
-                    <div className="space-y-2">
-                      {["Online", "Safe Space (Library)", "Counselor Office"].map((type) => (
-                        <label
-                          key={type}
-                          className={`flex items-center p-3 border rounded-lg cursor-pointer transition-all ${
-                            bookingData.type === type
-                              ? "border-emerald-500 bg-emerald-50"
-                              : "border-gray-200 hover:bg-gray-50"
-                          }`}
-                        >
-                          <input
-                            type="radio"
-                            name="locationType"
-                            value={type}
-                            checked={bookingData.type === type}
-                            onChange={(e) => setBookingData({ ...bookingData, type: e.target.value })}
-                            className="w-4 h-4 text-emerald-600 focus:ring-emerald-500 border-gray-300"
-                          />
-                          <span className="ml-3 text-gray-700 font-medium">{type}</span>
-                        </label>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div className="bg-blue-50 p-3 rounded-lg flex gap-3 items-start">
-                    <svg className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                    <p className="text-xs text-blue-700 leading-relaxed">
-                      <strong>Privacy Note:</strong> This appointment will appear as "Busy" on your calendar. The details (Counselor name, location) will be hidden from others.
-                    </p>
-                  </div>
-
-                  <div className="flex gap-2 mt-6">
-                    <button
-                      onClick={() => setBookingStep(1)}
-                      className="flex-1 py-3 border border-gray-300 text-gray-700 rounded-lg font-medium hover:bg-gray-50"
-                    >
-                      Back
-                    </button>
-                    <button
-                      onClick={handleConfirmBooking}
-                      className="flex-1 py-3 bg-emerald-600 text-white rounded-lg font-medium hover:bg-emerald-700"
-                    >
-                      Confirm Booking
-                    </button>
-                  </div>
-                </div>
-              )}
-            </motion.div>
-          ) : (
-            <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
-              <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-blue-600"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-                Your Upcoming Sessions
-              </h3>
-              <div className="space-y-3">
-                {upcomingAppointments.map((apt) => {
-                  const counselor = counselors.find(c => c.id === apt.counselorId);
-                  return (
-                    <div key={apt.id} className="p-4 rounded-lg bg-blue-50 border border-blue-100">
-                      <div className="flex justify-between items-start mb-2">
-                        <span className="font-bold text-blue-900">{counselor?.name}</span>
-                        <span className="bg-white px-2 py-0.5 rounded text-xs font-semibold text-blue-700 border border-blue-200">{apt.type}</span>
-                      </div>
-                      <div className="text-sm text-blue-800 flex flex-col gap-1">
-                        <span className="flex items-center gap-2">
-                          <svg className="w-4 h-4 opacity-70" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
-                          {apt.date} at {apt.time}
-                        </span>
-                        <span className="flex items-center gap-2">
-                          <svg className="w-4 h-4 opacity-70" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                          {apt.status}
-                        </span>
-                      </div>
-                      <div className="mt-3 pt-3 border-t border-blue-200 flex gap-2">
-                        <button className="flex-1 py-1.5 bg-blue-600 text-white text-xs font-medium rounded hover:bg-blue-700 transition-colors">
-                          Join Meeting
-                        </button>
-                        <button className="flex-1 py-1.5 bg-white text-blue-700 text-xs font-medium rounded border border-blue-200 hover:bg-blue-50 transition-colors">
-                          Reschedule
-                        </button>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-              <div className="mt-4 p-4 rounded-lg bg-gray-50 border border-gray-100 text-center">
-                <p className="text-sm text-gray-500 mb-2">Need immediate help?</p>
-                <button className="w-full py-2 bg-red-50 text-red-600 font-medium rounded border border-red-100 hover:bg-red-100 transition-colors flex items-center justify-center gap-2">
-                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" /></svg>
-                  Crisis Helpline
-                </button>
+              <div className="rounded-2xl border border-white/60 bg-white/80 p-4 shadow-sm backdrop-blur">
+                <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">Current profile</p>
+                <p className="mt-2 text-sm font-semibold text-gray-900">
+                  {currentUser?.name || nextAppointment?.patient_name || "Wellness Member"}
+                </p>
+                <p className="mt-1 text-xs text-gray-500">{currentUser?.email || "No email synced"}</p>
+                <p className="mt-3 text-xs text-gray-600">
+                  This profile name is shared with booking and AI chat context.
+                </p>
               </div>
             </div>
-          )}
+          </section>
+
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+            {stats.map((item, idx) => (
+              <div
+                key={item.id}
+                className={`rounded-2xl bg-gradient-to-br p-[1px] shadow-sm ${
+                  statThemes[idx % statThemes.length]
+                }`}
+              >
+                <div className="rounded-2xl bg-white p-4">
+                  <p className="text-sm text-gray-500">{item.label}</p>
+                  <p className="mt-1 text-2xl font-bold text-gray-900">{item.value}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div className="grid grid-cols-1 gap-6 xl:grid-cols-7">
+            <div className="space-y-6 xl:col-span-4">
+              <section className="rounded-3xl border border-gray-200 bg-white p-5 shadow-sm">
+                <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+                  <div>
+                    <h2 className="text-lg font-semibold text-gray-900">Available Counselors</h2>
+                    <p className="text-xs text-gray-500">Select a counselor to enable booking.</p>
+                  </div>
+                  <select
+                    value={languageFilter}
+                    onChange={(e) => setLanguageFilter(e.target.value)}
+                    className="rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-emerald-500"
+                  >
+                    {languages.map((lang) => (
+                      <option key={lang} value={lang}>
+                        {lang}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="space-y-3">
+                  {filteredCounselors.map((item) => {
+                    const isSelected = selectedCounselor?.id === item.id;
+                    return (
+                      <button
+                        key={item.id}
+                        type="button"
+                        onClick={() => setSelectedCounselor(item)}
+                        className={`w-full rounded-2xl border p-4 text-left transition-all ${
+                          isSelected
+                            ? "border-emerald-300 bg-emerald-50 shadow-sm"
+                            : "border-gray-200 bg-gray-50 hover:border-emerald-200 hover:bg-emerald-50/40"
+                        }`}
+                      >
+                        <div className="flex items-center justify-between gap-3">
+                          <div className="flex items-center gap-3">
+                            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-emerald-100 text-sm font-semibold text-emerald-700">
+                              {counselorInitials(item.name)}
+                            </div>
+                            <div>
+                              <h3 className="text-sm font-semibold text-gray-900">{item.name}</h3>
+                              <p className="text-sm text-emerald-700">{item.specialty}</p>
+                            </div>
+                          </div>
+                          <span className="rounded-full bg-amber-100 px-2 py-1 text-xs font-semibold text-amber-700">
+                            {item.rating} / 5
+                          </span>
+                        </div>
+                        <p className="mt-2 text-xs text-gray-500">
+                          {item.years_experience} years experience | {(item.languages || []).join(", ")}
+                        </p>
+                      </button>
+                    );
+                  })}
+
+                  {!filteredCounselors.length && (
+                    <p className="rounded-xl border border-dashed border-gray-300 bg-gray-50 p-4 text-sm text-gray-500">
+                      No counselors found for this language filter.
+                    </p>
+                  )}
+                </div>
+              </section>
+
+              <section className="rounded-3xl border border-gray-200 bg-white p-5 shadow-sm">
+                <h2 className="mb-3 text-lg font-semibold text-gray-900">Upcoming Sessions</h2>
+                <div className="space-y-3">
+                  {upcoming.map((item) => (
+                    <div
+                      key={item.id}
+                      className="rounded-2xl border border-gray-200 bg-gradient-to-r from-white to-gray-50 p-4"
+                    >
+                      <div className="mb-3 flex flex-wrap items-start justify-between gap-2">
+                        <div>
+                          <h3 className="text-sm font-semibold text-gray-900">{item.doctor}</h3>
+                          <p className="text-xs text-gray-500">
+                            {item.specialty} | {item.date} | {item.time}
+                          </p>
+                          {item.patient_name && (
+                            <p className="mt-1 text-xs text-gray-500">For: {item.patient_name}</p>
+                          )}
+                        </div>
+                        <span className="rounded-full bg-blue-100 px-2 py-1 text-xs font-semibold text-blue-700">
+                          {item.status}
+                        </span>
+                      </div>
+
+                      <div className="flex flex-wrap items-center gap-2">
+                        {item.meet_link ? (
+                          <a
+                            href={item.meet_link}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="rounded-lg bg-emerald-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-emerald-700"
+                          >
+                            Join Meeting
+                          </a>
+                        ) : (
+                          <span className="rounded-lg border border-gray-300 px-3 py-1.5 text-xs text-gray-600">
+                            {item.mode}
+                          </span>
+                        )}
+
+                        <select
+                          value={rescheduleSelection[item.id] || ""}
+                          onChange={(e) =>
+                            setRescheduleSelection((prev) => ({
+                              ...prev,
+                              [item.id]: e.target.value,
+                            }))
+                          }
+                          className="rounded-lg border border-gray-300 px-2 py-1.5 text-xs outline-none focus:border-emerald-500"
+                        >
+                          <option value="">Reschedule slot</option>
+                          {openSlots.map((slot) => (
+                            <option key={`${item.id}-${slot}`} value={slot}>
+                              {slot}
+                            </option>
+                          ))}
+                        </select>
+
+                        <button
+                          type="button"
+                          onClick={() => rescheduleAppointment(item.id)}
+                          disabled={reschedulingId === item.id}
+                          className="rounded-lg border border-gray-300 px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-100 disabled:opacity-60"
+                        >
+                          {reschedulingId === item.id ? "Saving..." : "Reschedule"}
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+
+                  {!upcoming.length && (
+                    <p className="rounded-xl border border-dashed border-gray-300 bg-gray-50 p-4 text-sm text-gray-500">
+                      No upcoming sessions yet. Book one from the panel.
+                    </p>
+                  )}
+                </div>
+              </section>
+            </div>
+
+            <div className="space-y-6 xl:col-span-3">
+              <section className="rounded-3xl border border-gray-200 bg-white p-5 shadow-sm">
+                <h2 className="mb-3 text-lg font-semibold text-gray-900">Book Appointment</h2>
+                {selectedCounselor ? (
+                  <>
+                    <div className="mb-3 rounded-xl border border-emerald-200 bg-emerald-50 p-3">
+                      <p className="text-xs text-emerald-700">Selected counselor</p>
+                      <p className="text-sm font-semibold text-gray-900">{selectedCounselor.name}</p>
+                      <p className="text-xs text-gray-600">{selectedCounselor.specialty}</p>
+                    </div>
+
+                    <select
+                      value={bookingData.preferred_slot}
+                      onChange={(e) =>
+                        setBookingData((prev) => ({ ...prev, preferred_slot: e.target.value }))
+                      }
+                      className="mb-2 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-emerald-500"
+                    >
+                      <option value="">Choose slot</option>
+                      {openSlots.map((slot) => (
+                        <option key={slot} value={slot}>
+                          {slot}
+                        </option>
+                      ))}
+                    </select>
+
+                    <div className="mb-2 grid grid-cols-2 gap-2">
+                      {bookingModes.map((mode) => (
+                        <button
+                          key={mode}
+                          type="button"
+                          onClick={() => setBookingData((prev) => ({ ...prev, mode }))}
+                          className={`rounded-lg border px-3 py-2 text-xs font-medium transition-colors ${
+                            bookingData.mode === mode
+                              ? "border-emerald-400 bg-emerald-50 text-emerald-700"
+                              : "border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
+                          }`}
+                        >
+                          {mode}
+                        </button>
+                      ))}
+                    </div>
+
+                    <input
+                      value={bookingData.location}
+                      onChange={(e) =>
+                        setBookingData((prev) => ({ ...prev, location: e.target.value }))
+                      }
+                      placeholder="Preferred location (optional)"
+                      className="mb-2 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-emerald-500"
+                    />
+                    <textarea
+                      value={bookingData.notes}
+                      onChange={(e) =>
+                        setBookingData((prev) => ({ ...prev, notes: e.target.value }))
+                      }
+                      rows={3}
+                      placeholder="Session notes (optional)"
+                      className="mb-3 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-emerald-500"
+                    />
+
+                    <button
+                      type="button"
+                      onClick={bookAppointment}
+                      disabled={booking}
+                      className="w-full rounded-xl bg-emerald-600 px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-emerald-700 disabled:opacity-60"
+                    >
+                      {booking ? "Booking..." : "Confirm Booking"}
+                    </button>
+                  </>
+                ) : (
+                  <p className="rounded-xl border border-dashed border-gray-300 bg-gray-50 p-4 text-sm text-gray-500">
+                    Select any counselor from the list to start booking.
+                  </p>
+                )}
+              </section>
+
+              <section className="rounded-3xl border border-gray-200 bg-white p-5 shadow-sm">
+                <div className="mb-3 flex items-center justify-between">
+                  <h2 className="text-lg font-semibold text-gray-900">Open Slots</h2>
+                  <span className="text-xs text-gray-500">{openSlots.length} available</span>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {openSlots.map((slot) => (
+                    <button
+                      key={slot}
+                      type="button"
+                      onClick={() => setBookingData((prev) => ({ ...prev, preferred_slot: slot }))}
+                      className={`rounded-full border px-3 py-1.5 text-xs font-medium transition-colors ${
+                        bookingData.preferred_slot === slot
+                          ? "border-emerald-500 bg-emerald-100 text-emerald-700"
+                          : "border-gray-300 bg-gray-50 text-gray-700 hover:bg-gray-100"
+                      }`}
+                    >
+                      {slot}
+                    </button>
+                  ))}
+                  {!openSlots.length && <p className="text-sm text-gray-500">No open slots currently available.</p>}
+                </div>
+              </section>
+
+              <section className="rounded-3xl border border-gray-200 bg-white p-5 shadow-sm">
+                <h2 className="mb-3 text-lg font-semibold text-gray-900">Session Prep Checklist</h2>
+                <ul className="space-y-2">
+                  {prepChecklist.map((item, idx) => (
+                    <li key={`${item}-${idx}`} className="flex items-start gap-2 text-sm text-gray-600">
+                      <span className="mt-1.5 inline-flex h-4 w-4 items-center justify-center rounded-full bg-emerald-100 text-[10px] font-semibold text-emerald-700">
+                        {idx + 1}
+                      </span>
+                      <span>{item}</span>
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            </div>
+          </div>
         </div>
-      </div>
+      )}
     </>
   );
 }

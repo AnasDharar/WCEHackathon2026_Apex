@@ -1,8 +1,9 @@
 "use client";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { auth, provider, signInWithPopup, signOut, db } from "../../../firebaseConfig";
+import { auth, provider, signInWithPopup, db } from "../../../firebaseConfig";
 import { doc, getDoc, setDoc, serverTimestamp } from "firebase/firestore";
+import { firstNameFromName, saveUserSession } from "@/lib/userSession";
 
 // Google Icon
 const GoogleIcon = () => (
@@ -24,29 +25,29 @@ export default function SignIn() {
     setError("");
     
     try {
-      // Add your Firebase Google sign-in logic here
       const result = await signInWithPopup(auth, provider);
-      console.log("Google sign-in successful:", result.user);
       const user = result.user;
+      const userSession = saveUserSession({
+        id: user.uid,
+        name: user.displayName || "",
+        first_name: firstNameFromName(user.displayName || "", user.email || ""),
+        email: user.email || "",
+      });
       const userRef = doc(db, "users", user.uid);
-      console.log("User reference:", userRef);
       const userDocSnapshot = await getDoc(userRef);
-      console.log("User document snapshot:", userDocSnapshot);
       if(userDocSnapshot.exists() && userDocSnapshot.data().testGiven){
-        console.log("User already exists");
         router.push("/home");
       }else{
-        console.log("User does not exist");
         await setDoc(userRef, {
         uid: user.uid,
         email: user.email,
-        displayName: user.displayName,
+        displayName: userSession?.name || user.displayName || "",
+        firstName: userSession?.first_name || firstNameFromName(user.displayName || "", user.email || ""),
         photoURL: user.photoURL,
         userDescription: "",
         testGiven: false,
         createdAt: serverTimestamp(),
       });
-      console.log("User created successfully");
       router.push("/test");
     }
     } catch (err) {
