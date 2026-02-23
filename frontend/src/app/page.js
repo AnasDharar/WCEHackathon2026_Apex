@@ -51,32 +51,34 @@ function Navbar() {
           </span>
         </div>
         <div className="hidden md:flex items-center gap-8">
-          <a
+          <Link
             href="#features"
             className="text-sm text-zinc-600 hover:text-zinc-900 transition-colors"
           >
             Features
-          </a>
-          <a
+          </Link>
+          <Link
             href="#about"
             className="text-sm text-zinc-600 hover:text-zinc-900 transition-colors"
           >
             About
-          </a>
-          <a
+          </Link>
+          <Link
             href="#download"
             className="text-sm text-zinc-600 hover:text-zinc-900 transition-colors"
           >
             Download
-          </a>
+          </Link>
         </div>
-        <motion.button
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-          className="rounded-full cursor-pointer bg-zinc-900 backdrop-blur-sm border border-zinc-800 px-5 py-2 text-sm font-medium text-white hover:bg-zinc-800 transition-colors"
-        >
-          Get Started
-        </motion.button>
+        <Link href="/home">
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            className="rounded-full cursor-pointer bg-zinc-900 backdrop-blur-sm border border-zinc-800 px-5 py-2 text-sm font-medium text-white hover:bg-zinc-800 transition-colors"
+          >
+            Get Started
+          </motion.button>
+        </Link>
       </div>
     </motion.nav>
   );
@@ -111,13 +113,13 @@ export default function Home() {
       <BgScroll>
         {/* Hero Title - Frames 1-10 (left half of screen) */}
         <ScrollOverlay scrollRange={[0, 0.29]} immediate>
-          <div className="w-full flex items-center px-8 md:px-16 lg:px-24">
+          <div className="w-full flex items-center px-6 sm:px-8 md:px-16 lg:px-24">
             <div className="max-w-xl">
               <motion.h1
                 initial={{ opacity: 0, y: 30 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 1, delay: 1 }}
-                className="text-5xl md:text-7xl lg:text-8xl font-bold tracking-tighter text-zinc-900"
+                className="text-4xl sm:text-5xl md:text-7xl lg:text-8xl font-bold tracking-tighter text-zinc-900"
               >
                 Manah Arogya
               </motion.h1>
@@ -125,7 +127,7 @@ export default function Home() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.8, delay: 1.2 }}
-                className="mt-6 text-lg md:text-xl text-zinc-600 max-w-md"
+                className="mt-6 text-base sm:text-lg md:text-xl text-zinc-600 max-w-md"
               >
                 A one-stop solution for your mental wellness. Take tests, book therapy sessions, track your habits, and much more
               </motion.p>
@@ -136,7 +138,7 @@ export default function Home() {
                 className="mt-8 flex flex-col sm:flex-row gap-4 pointer-events-auto"
               >
                   <Link href="/signin" passHref><CTAButton primary>Sign in</CTAButton></Link>
-                <CTAButton>Explore Features</CTAButton>
+                <Link href="/home"><CTAButton>Explore Features</CTAButton></Link>
               </motion.div>
               
               
@@ -146,8 +148,8 @@ export default function Home() {
 
         {/* About Manah Aarogya - Frames 18-23 (centered) */}
         <ScrollOverlay scrollRange={[0.55, 0.71]}>
-          <div className="text-center max-w-3xl">
-            <h2 className="text-4xl md:text-5xl font-bold tracking-tight text-zinc-900 mb-4">
+          <div className="text-center max-w-3xl px-6">
+            <h2 className="text-3xl md:text-5xl font-bold tracking-tight text-zinc-900 mb-4">
               Why Manah Arogya?
             </h2>
             <p className="text-zinc-600 text-sm md:text-md lg:text-lg leading-relaxed">
