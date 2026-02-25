@@ -1,10 +1,11 @@
 "use client";
 
-import { useTransform, motion } from "motion/react";
+import { useTransform, motion, useInView } from "motion/react";
 import { useRef } from "react";
 import BgScroll, { useScrollContext } from "@/components/BgScroll";
 import Link from "next/link";
 import AnimatedTestimonialsDemo from "@/components/animated-testimonials-demo";
+import FloatingLines from "@/components/ui/floatingLineBg";
 
 // Scroll-linked text overlay component
 function ScrollOverlay({ children, scrollRange, className = "", immediate = false }) {
@@ -36,7 +37,7 @@ function ScrollOverlay({ children, scrollRange, className = "", immediate = fals
 }
 
 // Navbar Component
-function Navbar() {
+function Navbar({ isDark = false }) {
   return (
     <motion.nav
       initial={{ y: -100, opacity: 0 }}
@@ -44,31 +45,31 @@ function Navbar() {
       transition={{ duration: 0.8, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
       className="sticky top-2 left-0 right-0 z-50 px-4 md:px-0 pointer-events-none"
     >
-      <div className="mx-auto flex max-w-5xl items-center justify-between rounded-full bg-white/70 backdrop-blur-xl border border-white/20 shadow-[0_8px_32px_rgba(0,0,0,0.08)] px-6 py-3 pointer-events-auto">
+      <div className={`mx-auto flex max-w-5xl items-center justify-between rounded-full backdrop-blur-xl border shadow-[0_8px_32px_rgba(0,0,0,0.08)] px-6 py-3 pointer-events-auto transition-colors duration-500 ${isDark ? 'bg-zinc-900/80 border-white/10' : 'bg-white/70 border-white/20'}`}>
         <Link href="/" className="flex items-center gap-3 group">
           <div className="relative h-10 w-10 overflow-hidden rounded-xl shadow-sm transition-transform group-hover:scale-105">
             <img src="/logo.png" alt="Logo" className="h-full w-full object-cover" />
           </div>
-          <span className="text-xl font-bold text-black">
+          <span className={`text-xl font-bold transition-colors duration-500 ${isDark ? 'text-white' : 'text-black'}`}>
             Manah Arogya
           </span>
         </Link>
-        <div className="hidden md:flex items-center gap-8 bg-zinc-100/50 rounded-full px-6 py-2 border border-zinc-200/50">
+        <div className={`hidden md:flex items-center gap-8 rounded-full px-6 py-2 border transition-colors duration-500 ${isDark ? 'bg-zinc-800/50 border-zinc-700/50' : 'bg-zinc-100/50 border-zinc-200/50'}`}>
           <Link
             href="#features"
-            className="text-sm font-medium text-zinc-600 hover:text-zinc-900 transition-colors"
+            className={`text-sm font-medium transition-colors ${isDark ? 'text-zinc-300 hover:text-white' : 'text-zinc-600 hover:text-zinc-900'}`}
           >
             Features
           </Link>
           <Link
             href="#about"
-            className="text-sm font-medium text-zinc-600 hover:text-zinc-900 transition-colors"
+            className={`text-sm font-medium transition-colors ${isDark ? 'text-zinc-300 hover:text-white' : 'text-zinc-600 hover:text-zinc-900'}`}
           >
             About
           </Link>
           <Link
             href="/contact"
-            className="text-sm font-medium text-zinc-600 hover:text-zinc-900 transition-colors"
+            className={`text-sm font-medium transition-colors ${isDark ? 'text-zinc-300 hover:text-white' : 'text-zinc-600 hover:text-zinc-900'}`}
           >
             Contact
           </Link>
@@ -79,7 +80,7 @@ function Navbar() {
             <motion.button
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
-              className="relative overflow-hidden rounded-full bg-zinc-900 px-6 py-2.5 text-sm font-semibold text-white shadow-md transition-all hover:bg-zinc-800 hover:shadow-lg hover:shadow-zinc-900/20"
+              className={`relative overflow-hidden rounded-full px-6 py-2.5 text-sm font-semibold shadow-md transition-all hover:shadow-lg ${isDark ? 'bg-white text-zinc-900 hover:bg-zinc-200 hover:shadow-white/20' : 'bg-zinc-900 text-white hover:bg-zinc-800 hover:shadow-zinc-900/20'}`}
             >
               <span className="relative z-10">Login</span>
             </motion.button>
@@ -110,10 +111,125 @@ function CTAButton({ children, primary = false, className = "" }) {
   );
 }
 
+const timelineData = [
+  {
+    title: "Sign in with Google",
+    description: "Securely log in via Google to begin your personalized wellness journey seamlessly.",
+    icon: "/timeline-icons/login.png",
+    step: "Step 1"
+  },
+  {
+    title: "Take an Assessment",
+    description: "Answer a few simple, clinical-grade questions so we can understand your current mental state.",
+    icon: "/timeline-icons/test.png",
+    step: "Step 2"
+  },
+  {
+    title: "AI & Resource Curation",
+    description: "Our advanced AI agents analyze your test results to handpick the best resources and suggest daily habits.",
+    icon: "/timeline-icons/ai.png",
+    step: "Step 3"
+  },
+  {
+    title: "Access Your Dashboard",
+    description: "Everything you need in one place: habit tracking, therapy bookings, AI chat, peer support, and resource library.",
+    icon: "/timeline-icons/dashboard.png",
+    step: "Step 4"
+  },
+  {
+    title: "See Real Progress",
+    description: "Watch your mental well-being improve over time with consistent tracking and expert support.",
+    icon: "/timeline-icons/growth.png",
+    step: "Step 5"
+  }
+];
+
+function TimelineSection() {
+  return (
+    <section className="py-24 bg-white relative overflow-hidden" id="how-it-works">
+      <div className="max-w-7xl mx-auto px-6 relative z-10">
+        <div className="text-center mb-16 md:mb-24">
+          <motion.h2
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="text-3xl md:text-5xl font-bold tracking-tight text-zinc-900 mb-4"
+          >
+            How It Works
+          </motion.h2>
+          <motion.p
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.1 }}
+            className="text-zinc-600 text-lg max-w-2xl mx-auto"
+          >
+            Your journey to mental well-being, simplified into five easy steps.
+          </motion.p>
+        </div>
+
+        <div className="relative max-w-5xl mx-auto mt-12">
+          {/* Vertical Line */}
+          <div className="absolute left-8 md:left-1/2 top-4 bottom-4 w-[2px] bg-linear-to-b from-emerald-100 via-emerald-400 to-teal-100 -translate-x-1/2 rounded-full hidden md:block" />
+          <div className="absolute left-8 top-4 bottom-4 w-[2px] bg-linear-to-b from-emerald-100 via-emerald-400 to-teal-100 -translate-x-1/2 rounded-full md:hidden" />
+
+          {timelineData.map((item, index) => {
+            const isEven = index % 2 === 0;
+            return (
+              <motion.div
+                key={index}
+                initial={{ opacity: 0, y: 40 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, margin: "-100px" }}
+                transition={{ duration: 0.6, delay: 0.1 }}
+                className="relative flex items-center justify-between mb-16 md:mb-24 w-full flex-row"
+              >
+                {/* Desktop layout: 2 columns split by center */}
+                <div className="hidden md:flex w-full items-center justify-center">
+                  <div className={`w-1/2 flex items-center shrink-0 ${isEven ? 'justify-end pr-16' : 'justify-start pl-16 order-last'}`}>
+                    {/* Card Content */}
+                    <div className="bg-white p-6 md:p-8 rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.06)] border-2 border-gray-200 group hover:-translate-y-2 transition-all duration-300 hover:shadow-[0_8px_30px_rgb(16,185,129,0.15)] max-w-md w-[400px] relative z-20">
+                      <h3 className="text-xl md:text-2xl font-bold text-zinc-900 mb-3">{item.title}</h3>
+                      <p className="text-zinc-600 leading-relaxed text-sm md:text-base">{item.description}</p>
+                    </div>
+                  </div>
+                  <div className={`w-1/2 flex items-center shrink-0 ${isEven ? 'justify-start pl-16 order-last' : 'justify-end pr-16'}`}>
+                    {/* Time/Step indicator */}
+                    <div className={`text-xl font-bold text-zinc-300 w-full ${isEven ? 'text-left' : 'text-right'}`}>
+                      {item.step}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Mobile layout */}
+                <div className="md:hidden flex w-full relative z-20 border">
+                  <div className="w-[calc(100%-5rem)] ml-auto bg-white p-6 rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.06)] border border-zinc-100 group hover:-translate-y-1 transition-transform">
+                    <div className="text-sm font-bold text-emerald-600 mb-2">{item.step}</div>
+                    <h3 className="text-xl font-bold text-zinc-900 mb-2">{item.title}</h3>
+                    <p className="text-zinc-600 leading-relaxed text-sm">{item.description}</p>
+                  </div>
+                </div>
+
+                {/* Center Icon (Absolute) */}
+                <div className="absolute left-8 md:left-1/2 w-14 h-14 md:w-16 md:h-16 bg-white border-[6px] border-zinc-50 rounded-full flex items-center justify-center text-2xl shadow-[0_0_20px_rgba(16,185,129,0.3)] -translate-x-1/2 z-30 transition-transform duration-300 group-hover:scale-110 shrink-0">
+                  <img src={item.icon} alt="icon" className="w-10 h-10 object-cover" />
+                </div>
+              </motion.div>
+            );
+          })}
+        </div>
+      </div>
+    </section>
+  );
+}
+
 export default function Home() {
+  const ctaRef = useRef(null);
+  const isCtaInView = useInView(ctaRef, { margin: "-100px 0px 0px 0px" });
+
   return (
     <main className="relative bg-white font-jakarta">
-      <Navbar />
+      <Navbar isDark={isCtaInView} />
 
       <BgScroll>
         {/* Hero Title - Frames 1-10 (left half of screen) */}
@@ -225,11 +341,17 @@ export default function Home() {
       {/* Features Section */}
       <AnimatedTestimonialsDemo />
 
+      {/* Timeline Section */}
+      <TimelineSection />
+
       {/* Final CTA Section */}
-      <section className="relative z-20 bg-zinc-900 py-24 md:py-32 overflow-hidden">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(16,185,129,0.15),transparent_50%)]" />
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_bottom_left,rgba(20,184,166,0.15),transparent_50%)]" />
-        <div className="max-w-4xl mx-auto px-6 text-center relative z-10">
+      <section ref={ctaRef} className="relative z-20 bg-zinc-900 min-h-screen flex flex-col justify-center overflow-hidden">
+        <div className="absolute inset-0 z-0">
+          <FloatingLines />
+        </div>
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(16,185,129,0.15),transparent_50%)] pointer-events-none" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_bottom_left,rgba(20,184,166,0.15),transparent_50%)] pointer-events-none" />
+        <div className="max-w-4xl w-full mx-auto px-6 text-center relative z-10 pointer-events-none">
           <motion.h2
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
@@ -245,14 +367,14 @@ export default function Home() {
             transition={{ delay: 0.1 }}
             className="text-lg md:text-xl text-zinc-400 mb-10 max-w-2xl mx-auto"
           >
-            Join thousands of students who are already taking control of their mental health and academic success.
+            A hackathon project built to prioritize mental wellbeing for students through accessible AI and analytics.
           </motion.p>
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             whileInView={{ opacity: 1, scale: 1 }}
             viewport={{ once: true }}
             transition={{ delay: 0.2 }}
-            className="flex flex-col sm:flex-row gap-4 justify-center"
+            className="flex flex-col sm:flex-row gap-4 justify-center pointer-events-auto"
           >
             <Link href="/signin">
               <button className="px-8 py-4 rounded-full font-semibold text-base transition-all duration-300 bg-white text-zinc-900 hover:bg-zinc-100 hover:scale-105 shadow-[0_0_40px_rgba(255,255,255,0.2)]">
