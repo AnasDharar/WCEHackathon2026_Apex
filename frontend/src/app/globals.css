@@ -8,10 +8,11 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: "Google Sans", var(--font-jost), system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  --font-display: var(--font-fjalla), sans-serif;
+  --font-sans: var(--font-jakarta), system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-jakarta: var(--font-jakarta);
+  --font-display: "Product Sans", "Google Sans", system-ui, sans-serif;
+  --font-google: "Product Sans", "Google Sans", system-ui, sans-serif;
   --font-fjalla-one: var(--font-fjalla), sans-serif;
-  --font-google: "Google Sans", system-ui, sans-serif;
   --font-mono: var(--font-geist-mono);
 }
 
@@ -30,6 +31,16 @@ body {
   overflow-x: hidden;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+.font-google {
+  font-family: var(--font-google);
 }
 
 /* Scrollbar styling */

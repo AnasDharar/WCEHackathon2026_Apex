@@ -73,7 +73,7 @@ export const AnimatedTestimonials = ({
                                         src={testimonial.src}
                                         alt={testimonial.name}
                                         draggable={false}
-                                        className="h-full w-full rounded-3xl object-cover object-center shadow-xl"
+                                        className="h-full w-full rounded-3xl object-cover object-center shadow-2xl shadow-emerald-500/10"
                                     />
                                 </motion.div>
                             ))}
@@ -103,7 +103,7 @@ export const AnimatedTestimonials = ({
                         <h3 className="text-3xl font-bold text-zinc-900">
                             {testimonials[active].name}
                         </h3>
-                        <p className="text-base text-zinc-500 mt-1 mb-8 font-medium">
+                        <p className="text-base text-emerald-600 mt-1 mb-8 font-medium">
                             {testimonials[active].designation}
                         </p>
                         <motion.p className="text-xl md:text-2xl font-medium text-zinc-700 leading-relaxed">
@@ -135,15 +135,15 @@ export const AnimatedTestimonials = ({
                     <div className="flex gap-4 pt-12">
                         <button
                             onClick={handlePrev}
-                            className="group/button flex h-10 w-10 items-center justify-center rounded-full bg-zinc-100 border border-zinc-200 hover:bg-zinc-200 transition-colors"
+                            className="group/button flex h-10 w-10 items-center justify-center rounded-full bg-emerald-50 border border-emerald-200 hover:bg-emerald-100 transition-colors"
                         >
-                            <IconArrowLeft className="h-5 w-5 text-zinc-800 transition-transform duration-300 group-hover/button:-translate-x-1" />
+                            <IconArrowLeft className="h-5 w-5 text-emerald-800 transition-transform duration-300 group-hover/button:-translate-x-1" />
                         </button>
                         <button
                             onClick={handleNext}
-                            className="group/button flex h-10 w-10 items-center justify-center rounded-full bg-zinc-100 border border-zinc-200 hover:bg-zinc-200 transition-colors"
+                            className="group/button flex h-10 w-10 items-center justify-center rounded-full bg-emerald-50 border border-emerald-200 hover:bg-emerald-100 transition-colors"
                         >
-                            <IconArrowRight className="h-5 w-5 text-zinc-800 transition-transform duration-300 group-hover/button:translate-x-1" />
+                            <IconArrowRight className="h-5 w-5 text-emerald-800 transition-transform duration-300 group-hover/button:translate-x-1" />
                         </button>
                     </div>
                 </div>

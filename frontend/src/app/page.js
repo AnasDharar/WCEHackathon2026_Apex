@@ -112,7 +112,7 @@ function CTAButton({ children, primary = false, className = "" }) {
 
 export default function Home() {
   return (
-    <main className="relative bg-white">
+    <main className="relative bg-white font-jakarta">
       <Navbar />
 
       <BgScroll>
@@ -198,11 +198,13 @@ export default function Home() {
         </ScrollOverlay>
 
         {/* About Manah Aarogya - Frames 18-23 (centered) */}
+        <ScrollOverlay scrollRange={[0.55, 1]}>
+          <div className="absolute inset-y-0 left-0 w-1/3 md:w-1/4 bg-linear-to-r from-orange-500/70 via-orange-200/70 to-transparent blur-3xl -z-10 pointer-events-none" />
+          <div className="absolute inset-y-0 right-0 w-1/3 md:w-1/4 bg-linear-to-l from-lime-500/70 via-lime-200/70 to-transparent blur-3xl -z-10 pointer-events-none" />
+        </ScrollOverlay>
         <ScrollOverlay scrollRange={[0.55, 0.71]}>
           <div className="relative w-full h-full flex items-center justify-center overflow-hidden">
             {/* Left and Right Gradients */}
-            <div className="absolute inset-y-0 left-0 w-1/3 md:w-1/4 bg-linear-to-r from-orange-500/70 via-orange-200/70 to-transparent blur-3xl -z-10 pointer-events-none" />
-            <div className="absolute inset-y-0 right-0 w-1/3 md:w-1/4 bg-linear-to-l from-lime-500/70 via-lime-200/70 to-transparent blur-3xl -z-10 pointer-events-none" />
 
             <div className="text-center max-w-3xl px-6 relative z-10">
               <h2 className="text-3xl md:text-5xl font-bold tracking-tight text-zinc-900 mb-4">
