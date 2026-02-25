@@ -8,7 +8,22 @@ const API_BASE_URL = RAW_API_BASE_URL.replace(/\/+$/, "");
 
 function toUrl(path, params) {
   const normalizedPath = path.startsWith("/") ? path : `/${path}`;
-  const url = new URL(`${API_BASE_URL}${normalizedPath}`);
+
+  // In production API_BASE_URL is "/api/v1". new URL("/api/v1/...", ...) needs a base if it's relative
+  // If API_BASE_URL is absolute (starts with http), this will work normally.
+  // If it's relative, we use the current window origin in the browser, or a dummy base if on server side.
+  const isServer = typeof window === "undefined";
+  const baseUrlForConstructor = API_BASE_URL.startsWith("http")
+    ? API_BASE_URL
+    : (isServer ? "http://localhost:3000" : window.location.origin);
+
+  let url;
+  try {
+    url = new URL(`${API_BASE_URL}${normalizedPath}`, baseUrlForConstructor);
+  } catch (e) {
+    // Fallback if URL construction still fails
+    url = new URL(`${API_BASE_URL}${normalizedPath}`, "http://localhost");
+  }
 
   if (params) {
     Object.entries(params).forEach(([key, value]) => {
