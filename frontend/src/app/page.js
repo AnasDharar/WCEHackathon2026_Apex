@@ -258,7 +258,7 @@ export default function Home() {
               </motion.p>
 
               {/* Feature Pills */}
-              <motion.div
+              {/* <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.8, delay: 1.3 }}
@@ -280,7 +280,7 @@ export default function Home() {
                   <span className="text-xl">🤝</span>
                   <span className="text-sm font-bold text-zinc-800 leading-tight">Peer Support<br />Forum</span>
                 </div>
-              </motion.div>
+              </motion.div> */}
 
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
@@ -306,7 +306,7 @@ export default function Home() {
                 <span className="text-zinc-300 hidden sm:block">|</span>
                 <div className="flex items-center gap-1.5">
                   <span className="text-emerald-700">✅</span>
-                  <span>Trusted by Experts</span>
+                  <span>Made by Real Devs</span>
                 </div>
               </motion.div>
             </div>
@@ -365,7 +365,7 @@ export default function Home() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ delay: 0.1 }}
-            className="text-lg md:text-xl text-zinc-400 mb-10 max-w-2xl mx-auto"
+            className="text-lg md:text-xl text-zinc-200 font-semibold mb-10 max-w-2xl mx-auto"
           >
             A hackathon project built to prioritize mental wellbeing for students through accessible AI and analytics.
           </motion.p>
