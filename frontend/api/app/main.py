@@ -20,6 +20,7 @@ from app.routers import (
     habits,
     profile,
     resources,
+    voice,
 )
 
 app = FastAPI(
@@ -54,3 +55,5 @@ app.include_router(events.router)
 app.include_router(events.compat_router)
 app.include_router(events.compat_api_router)
 app.include_router(community.router)
+app.include_router(voice.router)
+app.include_router(voice.compat_router)

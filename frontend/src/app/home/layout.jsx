@@ -1,5 +1,6 @@
 "use client";
 import { useState, useRef } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { NotificationProvider } from "@/context/NotificationContext";
@@ -19,6 +20,14 @@ const HabitIcon = () => (
 const ChatbotIcon = () => (
   <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     <path d="M12 8V4H8"/><rect width="16" height="12" x="4" y="8" rx="2"/><path d="M2 14h2"/><path d="M20 14h2"/><path d="M15 13v2"/><path d="M9 13v2"/>
+  </svg>
+);
+
+const TherapyRoomIcon = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M3 21h18"/>
+    <path d="M5 21V7l7-4 7 4v14"/>
+    <path d="M9 21v-6h6v6"/>
   </svg>
 );
 
@@ -46,11 +55,19 @@ const CommunityIcon = () => (
   </svg>
 );
 
+const ExercisesIcon = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M8 4h8"/><path d="M9 2v4"/><path d="M15 2v4"/><path d="M12 10v10"/><path d="M8 14h8"/><path d="M6 22h12"/>
+  </svg>
+);
+
 // Navigation items
 const navItems = [
   { id: "overview", label: "Overview", icon: OverviewIcon, href: "/home" },
   { id: "habit-tracker", label: "Habit Tracker", icon: HabitIcon, href: "/home/habit-tracker" },
   { id: "ai-chatbot", label: "AI Assistant", icon: ChatbotIcon, href: "/home/ai-chatbot" },
+  { id: "voice-assistant", label: "Therapy Room", icon: TherapyRoomIcon, href: "/home/voice-assistant" },
+  { id: "exercises", label: "Exercises", icon: ExercisesIcon, href: "/home/exercises" },
   { id: "resources", label: "Resources", icon: ResourcesIcon, href: "/home/resources" },
   { id: "appointments", label: "Appointments", icon: AppointmentsIcon, href: "/home/appointments" },
   { id: "events", label: "Events", icon: EventsIcon, href: "/home/events" },
@@ -92,17 +109,22 @@ export default function HomeLayout({ children }) {
         <div className="p-4 flex justify-center items-center">
           <div className="">
             {!sidebarCollapsed && (
-              <img
+              <Image
                 src="/logo_1.jpeg"
                 alt="Manah Arogya"
                 className="h-9 w-auto object-contain"
+                width={144}
+                height={36}
               />
             )}
             {sidebarCollapsed && (
-              <img
+              <Image
                 src="/logo_1_short.png"
                 alt="Logo Icon"
-                className="w-8 h-auto" />
+                className="w-8 h-auto"
+                width={32}
+                height={32}
+              />
             )}
           </div>
         </div>
@@ -123,7 +145,7 @@ export default function HomeLayout({ children }) {
                 } ${sidebarCollapsed ? "justify-center" : ""}`}
                 title={sidebarCollapsed ? item.label : ""}
               >
-                <Icon />
+                {Icon ? <Icon /> : null}
                 {!sidebarCollapsed && <span className="text-sm">{item.label}</span>}
               </Link>
             );
