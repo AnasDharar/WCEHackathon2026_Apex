@@ -7,7 +7,7 @@ import {
   RoomAudioRenderer,
   VoiceAssistantControlBar,
 } from "@livekit/components-react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import { api } from "@/lib/api";
 import { getUserSession } from "@/lib/userSession";
@@ -29,13 +29,10 @@ function buildRoomName(userId: string | null | undefined) {
 }
 
 export default function MentalHealthVoiceRoom() {
-  const [sessionIdentity, setSessionIdentity] = useState(() => {
-    const user = getUserSession();
-    return {
-      participantName: user?.name || user?.first_name || "Guest User",
-      roomName: buildRoomName(user?.id),
-    };
-  });
+  const [sessionIdentity, setSessionIdentity] = useState(() => ({
+    participantName: "Guest User",
+    roomName: "",
+  }));
   const [serverUrl, setServerUrl] = useState("");
   const [token, setToken] = useState("");
   const [status, setStatus] = useState<TokenStatus>("idle");
@@ -48,6 +45,14 @@ export default function MentalHealthVoiceRoom() {
     }
     return `Private room: ${roomName}`;
   }, [roomName]);
+
+  useEffect(() => {
+    const user = getUserSession();
+    setSessionIdentity({
+      participantName: user?.name || user?.first_name || "Guest User",
+      roomName: buildRoomName(user?.id),
+    });
+  }, []);
 
   const connectToRoom = async () => {
     if (!roomName || !participantName) {
