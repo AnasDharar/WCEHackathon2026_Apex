@@ -92,20 +92,7 @@ class InMemoryStore:
         }
 
         self._test_results: list[dict[str, Any]] = [
-            {
-                "id": 1,
-                "title": "Weekly Stress Assessment",
-                "score": "Low",
-                "feedback": "Great progress! Your stress levels have decreased by 15% this week.",
-                "date": "Feb 20, 2026",
-            },
-            {
-                "id": 2,
-                "title": "Sleep Quality Analysis",
-                "score": "Good",
-                "feedback": "Your sleep pattern is improving. Keep a consistent bedtime routine.",
-                "date": "Feb 18, 2026",
-            },
+            
         ]
 
         self._today_habits: list[dict[str, Any]] = [
@@ -1203,7 +1190,7 @@ class InMemoryStore:
         return {
             "welcome_name": self._profile["first_name"],
             "test_results": deepcopy(test_results),
-            "live_appointments": deepcopy(self._appointments[:2]),
+            "live_appointments": deepcopy(self._appointments[:1]),
             "today_habits": deepcopy(self._today_habits),
             "habit_calendar": self.get_habit_calendar(year=2026, month=2)["days"],
             "resource_highlights": deepcopy(self._resources[:4]),
