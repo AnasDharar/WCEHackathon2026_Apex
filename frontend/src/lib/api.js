@@ -1,3 +1,5 @@
+import axios from "axios";
+
 import { getUserSession } from "@/lib/userSession";
 
 const RAW_API_BASE_URL =
@@ -6,123 +8,135 @@ const RAW_API_BASE_URL =
 
 const API_BASE_URL = RAW_API_BASE_URL.replace(/\/+$/, "");
 
-function toUrl(path, params) {
-  const normalizedPath = path.startsWith("/") ? path : `/${path}`;
-
-  // In production API_BASE_URL is "/api/v1". new URL("/api/v1/...", ...) needs a base if it's relative
-  // If API_BASE_URL is absolute (starts with http), this will work normally.
-  // If it's relative, we use the current window origin in the browser, or a dummy base if on server side.
-  const isServer = typeof window === "undefined";
-  const baseUrlForConstructor = API_BASE_URL.startsWith("http")
-    ? API_BASE_URL
-    : (isServer ? "http://localhost:3000" : window.location.origin);
-
-  let url;
-  try {
-    url = new URL(`${API_BASE_URL}${normalizedPath}`, baseUrlForConstructor);
-  } catch (e) {
-    // Fallback if URL construction still fails
-    url = new URL(`${API_BASE_URL}${normalizedPath}`, "http://localhost");
-  }
-
-  if (params) {
-    Object.entries(params).forEach(([key, value]) => {
-      if (value === undefined || value === null || value === "") {
-        return;
-      }
-      url.searchParams.set(key, String(value));
-    });
-  }
-
-  return url.toString();
-}
-
-function parseError(res, payload) {
-  if (payload && typeof payload === "object") {
-    if (typeof payload.detail === "string") {
-      return payload.detail;
-    }
-    if (typeof payload.message === "string") {
-      return payload.message;
-    }
-    if (typeof payload.error === "string") {
-      return payload.error;
-    }
-  }
-
-  return `Request failed with status ${res.status}`;
-}
-
 function getIdentityHeaders() {
   const user = getUserSession();
-  if (!user) {
-    return {};
-  }
+  if (!user) return {};
 
   const headers = {};
-  if (user.id) {
-    headers["X-User-Id"] = user.id;
-  }
-  if (user.name) {
-    headers["X-User-Name"] = user.name;
-  }
-  if (user.first_name) {
-    headers["X-User-First-Name"] = user.first_name;
-  }
-  if (user.email) {
-    headers["X-User-Email"] = user.email;
-  }
+  if (user.id) headers["X-User-Id"] = user.id;
+  if (user.name) headers["X-User-Name"] = user.name;
+  if (user.first_name) headers["X-User-First-Name"] = user.first_name;
+  if (user.email) headers["X-User-Email"] = user.email;
   return headers;
 }
 
-async function request(path, options = {}) {
-  const {
-    method = "GET",
-    params,
-    body,
-    headers = {},
-    token,
-    cache = "no-store",
-  } = options;
+async function getFirebaseToken() {
+  if (typeof window === "undefined") return null;
+  try {
+    const firebaseModule = await import("../../firebaseConfig");
+    const auth = firebaseModule?.auth;
+    const user = auth?.currentUser;
+    if (!user) return null;
+    return await user.getIdToken();
+  } catch {
+    return null;
+  }
+}
 
-  const finalHeaders = { ...getIdentityHeaders(), ...headers };
-  const init = {
-    method,
-    headers: finalHeaders,
-    cache,
+function parseSseEventBlock(block) {
+  const lines = block.split("\n").filter(Boolean);
+  let event = "message";
+  const dataLines = [];
+  for (const line of lines) {
+    if (line.startsWith("event:")) event = line.slice("event:".length).trim();
+    if (line.startsWith("data:")) dataLines.push(line.slice("data:".length).trim());
+  }
+  const dataRaw = dataLines.join("\n");
+  let data = dataRaw;
+  try {
+    data = dataRaw ? JSON.parse(dataRaw) : null;
+  } catch {
+    data = dataRaw;
+  }
+  return { event, data };
+}
+
+const client = axios.create({
+  baseURL: API_BASE_URL,
+  headers: { "Content-Type": "application/json" },
+});
+
+async function request(method, path, options = {}) {
+  const { params, body, headers = {} } = options;
+  const token = options.token || (await getFirebaseToken());
+
+  const finalHeaders = {
+    ...getIdentityHeaders(),
+    ...headers,
   };
-
   if (token) {
     finalHeaders.Authorization = `Bearer ${token}`;
   }
 
-  if (body !== undefined) {
-    finalHeaders["Content-Type"] = "application/json";
-    init.body = JSON.stringify(body);
+  try {
+    const res = await client.request({
+      method,
+      url: path,
+      params,
+      data: body,
+      headers: finalHeaders,
+    });
+    return res.data;
+  } catch (err) {
+    const detail =
+      err?.response?.data?.detail ||
+      err?.response?.data?.message ||
+      err?.message ||
+      "Request failed";
+    const wrapped = new Error(detail);
+    wrapped.status = err?.response?.status;
+    wrapped.payload = err?.response?.data;
+    throw wrapped;
   }
-
-  const res = await fetch(toUrl(path, params), init);
-  const payload = await res.json().catch(() => null);
-
-  if (!res.ok) {
-    const error = new Error(parseError(res, payload));
-    error.status = res.status;
-    error.payload = payload;
-    throw error;
-  }
-
-  return payload;
 }
 
 export const api = {
   baseUrl: API_BASE_URL,
-  request,
-  get: (path, options = {}) => request(path, { ...options, method: "GET" }),
-  post: (path, body, options = {}) =>
-    request(path, { ...options, method: "POST", body }),
-  patch: (path, body, options = {}) =>
-    request(path, { ...options, method: "PATCH", body }),
-  put: (path, body, options = {}) =>
-    request(path, { ...options, method: "PUT", body }),
-  remove: (path, options = {}) => request(path, { ...options, method: "DELETE" }),
+  request: (path, options = {}) => request(options.method || "GET", path, options),
+  get: (path, options = {}) => request("GET", path, options),
+  post: (path, body, options = {}) => request("POST", path, { ...options, body }),
+  patch: (path, body, options = {}) => request("PATCH", path, { ...options, body }),
+  put: (path, body, options = {}) => request("PUT", path, { ...options, body }),
+  remove: (path, options = {}) => request("DELETE", path, options),
+  stream: async (path, options = {}) => {
+    const { body, headers = {}, signal, onEvent } = options;
+    const token = options.token || (await getFirebaseToken());
+
+    const finalHeaders = {
+      ...getIdentityHeaders(),
+      ...headers,
+      Accept: "text/event-stream",
+      "Content-Type": "application/json",
+    };
+    if (token) finalHeaders.Authorization = `Bearer ${token}`;
+
+    const res = await fetch(`${API_BASE_URL}${path}`, {
+      method: options.method || "POST",
+      headers: finalHeaders,
+      body: body === undefined ? undefined : JSON.stringify(body),
+      signal,
+    });
+    if (!res.ok) {
+      const text = await res.text().catch(() => "");
+      throw new Error(text || `Stream failed (${res.status})`);
+    }
+    if (!res.body) {
+      throw new Error("Streaming not supported by browser/runtime.");
+    }
+
+    const reader = res.body.getReader();
+    const decoder = new TextDecoder("utf-8");
+    let buffer = "";
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      buffer += decoder.decode(value, { stream: true });
+      const parts = buffer.split("\n\n");
+      buffer = parts.pop() || "";
+      for (const part of parts) {
+        const evt = parseSseEventBlock(part);
+        if (typeof onEvent === "function") onEvent(evt);
+      }
+    }
+  },
 };

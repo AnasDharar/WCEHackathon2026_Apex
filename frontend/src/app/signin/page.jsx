@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { auth, provider, signInWithPopup, db } from "../../../firebaseConfig";
 import { doc, getDoc, setDoc, serverTimestamp } from "firebase/firestore";
 import { firstNameFromName, saveUserSession } from "@/lib/userSession";
+import { api } from "@/lib/api";
 
 // Google Icon
 const GoogleIcon = () => (
@@ -27,30 +28,57 @@ export default function SignIn() {
     try {
       const result = await signInWithPopup(auth, provider);
       const user = result.user;
+      const idToken = await user.getIdToken();
       const userSession = saveUserSession({
         id: user.uid,
         name: user.displayName || "",
         first_name: firstNameFromName(user.displayName || "", user.email || ""),
         email: user.email || "",
       });
-      const userRef = doc(db, "users", user.uid);
-      const userDocSnapshot = await getDoc(userRef);
-      if(userDocSnapshot.exists() && userDocSnapshot.data().testGiven){
-        router.push("/home");
-      }else{
-        await setDoc(userRef, {
+      const loginRes = await api.post("/auth/login", {
+        token: idToken,
         uid: user.uid,
-        email: user.email,
-        displayName: userSession?.name || user.displayName || "",
-        firstName: userSession?.first_name || firstNameFromName(user.displayName || "", user.email || ""),
-        photoURL: user.photoURL,
-        userDescription: "",
-        testGiven: false,
-        createdAt: serverTimestamp(),
+        email: user.email || "",
+        name: user.displayName || "",
       });
-      router.push("/test");
-    }
+
+      let nextPath = loginRes?.has_completed_assessment ? "/home" : "/test";
+      if (nextPath === "/home") {
+        try {
+          const onboardingRes = await api.get("/habits/onboarding/status");
+          const onboarding = onboardingRes?.data || {};
+          if (!onboarding.completed || (onboarding.habit_count || 0) === 0) {
+            nextPath = "/home/habit-tracker?setup=1";
+          }
+        } catch (onboardingErr) {
+          console.error("Could not verify onboarding status:", onboardingErr);
+        }
+      }
+
+      void (async () => {
+        try {
+          const userRef = doc(db, "users", user.uid);
+          const userDocSnapshot = await getDoc(userRef);
+          if (!userDocSnapshot.exists()) {
+            await setDoc(userRef, {
+              uid: user.uid,
+              email: user.email,
+              displayName: userSession?.name || user.displayName || "",
+              firstName: userSession?.first_name || firstNameFromName(user.displayName || "", user.email || ""),
+              photoURL: user.photoURL,
+              userDescription: "",
+              testGiven: false,
+              createdAt: serverTimestamp(),
+            });
+          }
+        } catch (firestoreErr) {
+          console.error("Firestore user sync failed, continuing with sign-in:", firestoreErr);
+        }
+      })();
+
+      router.push(nextPath);
     } catch (err) {
+      console.error("Google sign-in failed:", err);
       setError("Google sign-in failed. Please try again.");
     } finally {
       setIsLoading(false);

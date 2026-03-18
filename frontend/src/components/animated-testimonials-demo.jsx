@@ -53,7 +53,7 @@ export default function AnimatedTestimonialsDemo() {
                     </span>
                 </h2>
                 <p className="text-lg text-zinc-600 leading-relaxed max-w-xl mx-auto">
-                    We've designed specialized tools to help you navigate college life with better mental resilience and emotional intelligence.
+                    We&apos;ve designed specialized tools to help you navigate college life with better mental resilience and emotional intelligence.
                 </p>
             </div>
             <AnimatedTestimonials testimonials={features} autoplay={true} />

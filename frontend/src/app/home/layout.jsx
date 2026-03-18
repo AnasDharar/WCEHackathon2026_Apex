@@ -1,9 +1,12 @@
 "use client";
-import { useState, useRef } from "react";
-import Image from "next/image";
+import { useEffect, useState, useRef } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { NotificationProvider } from "@/context/NotificationContext";
+import { getUserSession } from "@/lib/userSession";
+import { api } from "@/lib/api";
+import MoodCheckInModal from "@/components/MoodCheckInModal";
+import Grainient from "@/components/bg/bg";
 
 const box_shadow = "shadow-[0_4px_20px_rgba(0,0,0,0.03)]";
 
@@ -25,17 +28,23 @@ const ChatbotIcon = () => (
   </svg>
 );
 
+const ResourcesIcon = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20" />
+  </svg>
+);
+
 const TherapyRoomIcon = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
     <path d="M3 21h18"/>
     <path d="M5 21V7l7-4 7 4v14"/>
     <path d="M9 21v-6h6v6"/>
   </svg>
 );
 
-const ResourcesIcon = () => (
+const ExercisesIcon = () => (
   <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20" />
+    <path d="M8 4h8"/><path d="M9 2v4"/><path d="M15 2v4"/><path d="M12 10v10"/><path d="M8 14h8"/><path d="M6 22h12"/>
   </svg>
 );
 
@@ -63,12 +72,6 @@ const HelpIcon = () => (
   </svg>
 );
 
-const ExercisesIcon = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M8 4h8"/><path d="M9 2v4"/><path d="M15 2v4"/><path d="M12 10v10"/><path d="M8 14h8"/><path d="M6 22h12"/>
-  </svg>
-);
-
 // Navigation items
 const navItems = [
   { id: "overview", label: "Overview", icon: OverviewIcon, href: "/home" },
@@ -84,19 +87,120 @@ const navItems = [
 
 export default function HomeLayout({ children }) {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [authChecked, setAuthChecked] = useState(false);
+  const [moodModalOpen, setMoodModalOpen] = useState(false);
+  const [savingMood, setSavingMood] = useState(false);
+  const [moodError, setMoodError] = useState("");
   const pathname = usePathname();
+  const router = useRouter();
   const collapseTimeoutRef = useRef(null);
 
+  useEffect(() => {
+    const sessionUser = getUserSession();
+    if (!sessionUser?.id) {
+      router.replace("/signin");
+      return;
+    }
+    setAuthChecked(true);
+
+    const handleOpenMood = () => setMoodModalOpen(true);
+    window.addEventListener("openMoodModal", handleOpenMood);
+    return () => window.removeEventListener("openMoodModal", handleOpenMood);
+  }, [router]);
+
+  useEffect(() => {
+    let mounted = true;
+    async function checkMoodGate() {
+      if (!authChecked) return;
+      setMoodError("");
+      const key = "mood_checkin_last_date";
+      const today = new Date().toISOString().slice(0, 10);
+      const local = typeof window !== "undefined" ? window.localStorage.getItem(key) : null;
+      if (local === today) return;
+      try {
+        const res = await api.get("/mood/latest");
+        const latest = res?.data;
+        const latestDate = latest?.created_at ? String(latest.created_at).slice(0, 10) : null;
+        if (latestDate === today) {
+          window.localStorage.setItem(key, today);
+          return;
+        }
+        if (mounted) setMoodModalOpen(true);
+      } catch {
+        if (mounted) setMoodModalOpen(true);
+      }
+    }
+    checkMoodGate();
+    return () => {
+      mounted = false;
+    };
+  }, [authChecked, pathname]);
+
+  if (!authChecked) {
+    return <div className="min-h-screen flex items-center justify-center text-sm text-gray-500">Loading...</div>;
+  }
+
   return (
-    <div className="flex min-h-screen bg-[#f3f4f6]">
+    <div className="flex h-screen relative overflow-hidden bg-white/50">
+      <div className="fixed inset-0 z-0 pointer-events-none">
+        <Grainient
+          color1="#c5fce2"
+          color2="#34d399"
+          color3="#0aa179"
+          timeSpeed={0.15}
+          colorBalance={0}
+          warpStrength={1}
+          warpFrequency={5}
+          warpSpeed={2}
+          warpAmplitude={50}
+          blendAngle={0}
+          blendSoftness={0.05}
+          rotationAmount={500}
+          noiseScale={3}
+          grainAmount={0.17}
+          grainScale={2}
+          grainAnimated={false}
+          contrast={1.1}
+          gamma={1}
+          saturation={1}
+          centerX={0}
+          centerY={0}
+          zoom={0.9}
+        />
+      </div>
+
+      <div className="flex h-full w-full z-10 relative">
+        <MoodCheckInModal
+        open={moodModalOpen}
+        saving={savingMood}
+        error={moodError}
+        onClose={() => setMoodModalOpen(false)}
+        onSubmit={async (payload) => {
+          setSavingMood(true);
+          setMoodError("");
+          try {
+            await api.post("/mood/log", {
+              mood_score: payload.mood_score,
+              notes: payload.notes,
+            });
+            const today = new Date().toISOString().slice(0, 10);
+            window.localStorage.setItem("mood_checkin_last_date", today);
+            setMoodModalOpen(false);
+          } catch (err) {
+            setMoodError(err.message || "Failed to save mood");
+          } finally {
+            setSavingMood(false);
+          }
+        }}
+      />
+      
       {/* Sidebar */}
-      <div className="h-screen sticky top-0 p-5">
+      <div className="h-full p-5 shrink-0">
         <aside
           className={`${sidebarCollapsed ? "w-20" : "w-[260px]"
             } ${box_shadow} bg-white rounded-[24px] h-full flex flex-col transition-all duration-300 ease-in-out`}
         >
 
-<<<<<<< HEAD
           {/* Logo Area */}
           <div className="p-8 flex items-center">
             <div>
@@ -114,32 +218,8 @@ export default function HomeLayout({ children }) {
                   className="w-full h-auto" />
               )}
             </div>
-=======
-        {/* Logo Area */}
-        <div className="p-4 flex justify-center items-center">
-          <div className="">
-            {!sidebarCollapsed && (
-              <Image
-                src="/logo_1.jpeg"
-                alt="Manah Arogya"
-                className="h-9 w-auto object-contain"
-                width={144}
-                height={36}
-              />
-            )}
-            {sidebarCollapsed && (
-              <Image
-                src="/logo_1_short.png"
-                alt="Logo Icon"
-                className="w-8 h-auto"
-                width={32}
-                height={32}
-              />
-            )}
->>>>>>> 322f94523b3211670534a449443f2df78669a785
           </div>
 
-<<<<<<< HEAD
           {/* Divider */}
           <div className="mx-4 border-t border-neutral-100" />
 
@@ -158,7 +238,7 @@ export default function HomeLayout({ children }) {
                     } ${sidebarCollapsed ? "justify-center" : ""}`}
                   title={sidebarCollapsed ? item.label : ""}
                 >
-                  <div className={`${isActive ? "scale-105 text-emerald-600" : "group-hover:scale-105 group-hover:text-emerald-600"} transition-all duration-200`}>
+                  <div className={`${isActive ? "scale-105 text-gray-700" : "group-hover:scale-105 group-hover:text-gray-700"} transition-all duration-200`}>
                     <Icon />
                   </div>
                   {!sidebarCollapsed && <span className="text-[14px] font-medium tracking-tight">{item.label}</span>}
@@ -175,48 +255,24 @@ export default function HomeLayout({ children }) {
               className={`group w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-neutral-700 hover:text-neutral-900 hover:bg-emerald-50/50 transition-all duration-200 ease-in-out ${sidebarCollapsed ? "justify-center" : ""}`}
               title={sidebarCollapsed ? "Help & Support" : ""}
             >
-              <div className="group-hover:scale-105 group-hover:text-emerald-600 transition-all duration-200">
+              <div className="group-hover:scale-105 group-hover:text-gray-700 transition-all duration-200">
                 <HelpIcon />
               </div>
               {!sidebarCollapsed && <span className="text-[14px] font-medium tracking-tight">Help & Support</span>}
             </a>
           </div>
         </aside>
-=======
-        {/* Navigation */}
-        <nav className="flex-1 p-3 space-y-1 overflow-y-auto">
-          {navItems.map((item) => {
-            const Icon = item.icon;
-            const isActive = pathname === item.href;
-            return (
-              <Link
-                key={item.id}
-                href={item.href}
-                className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 ${
-                  isActive
-                    ? "bg-emerald-100 text-emerald-700 font-medium"
-                    : "text-gray-600 hover:bg-gray-100 hover:text-gray-800"
-                } ${sidebarCollapsed ? "justify-center" : ""}`}
-                title={sidebarCollapsed ? item.label : ""}
-              >
-                {Icon ? <Icon /> : null}
-                {!sidebarCollapsed && <span className="text-sm">{item.label}</span>}
-              </Link>
-            );
-          })}
-        </nav>
-      </aside>
->>>>>>> 322f94523b3211670534a449443f2df78669a785
       </div>
 
       {/* Main Content */}
-      <main className="flex-1 p-6 overflow-y-auto">
-        <div className="max-w-6xl mx-auto">
+      <main className="flex-1 p-6 overflow-y-auto w-full h-full">
+        <div className="max-w-6xl mx-auto w-full">
           <NotificationProvider>
             {children}
           </NotificationProvider>
         </div>
       </main>
+    </div>
     </div>
   );
 }

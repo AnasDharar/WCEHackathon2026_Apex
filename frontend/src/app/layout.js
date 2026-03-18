@@ -8,7 +8,21 @@ export const metadata = {
 export default function RootLayout({ children }) {
   return (
     <html lang="en">
-      <body className="antialiased font-sans">
+      <head>
+        <link
+          href="https://fonts.cdnfonts.com/css/product-sans"
+          rel="stylesheet"
+        />
+      </head>
+      <body
+        className="antialiased font-sans"
+        style={{
+          "--font-jakarta": "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+          "--font-geist-mono": "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', monospace",
+          "--font-fjalla": "system-ui, sans-serif",
+          "--font-jost": "system-ui, sans-serif",
+        }}
+      >
         {children}
       </body>
     </html>

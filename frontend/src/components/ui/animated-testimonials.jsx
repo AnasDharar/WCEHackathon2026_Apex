@@ -2,7 +2,7 @@
 
 import { IconArrowLeft, IconArrowRight } from "@tabler/icons-react";
 import { motion, AnimatePresence } from "motion/react";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
 export const AnimatedTestimonials = ({
     testimonials,
@@ -10,13 +10,13 @@ export const AnimatedTestimonials = ({
 }) => {
     const [active, setActive] = useState(0);
 
-    const handleNext = () => {
+    const handleNext = useCallback(() => {
         setActive((prev) => (prev + 1) % testimonials.length);
-    };
+    }, [testimonials.length]);
 
-    const handlePrev = () => {
+    const handlePrev = useCallback(() => {
         setActive((prev) => (prev - 1 + testimonials.length) % testimonials.length);
-    };
+    }, [testimonials.length]);
 
     const isActive = (index) => {
         return index === active;
@@ -27,32 +27,13 @@ export const AnimatedTestimonials = ({
             const interval = setInterval(handleNext, 5000);
             return () => clearInterval(interval);
         }
-    }, [autoplay]);
+    }, [autoplay, handleNext]);
 
-    const rotationsBySrc = useMemo(() => {
-        const hashString = (value) => {
-            let hash = 0;
-            for (let i = 0; i < value.length; i += 1) {
-                hash = (hash * 31 + value.charCodeAt(i)) % 997;
-            }
-            return hash;
-        };
-
-        return new Map(
-            testimonials.map((testimonial) => {
-                const key = testimonial.src || testimonial.name || "";
-                const rotation = (hashString(key) % 21) - 10;
-                return [testimonial.src, rotation];
-            })
-        );
-    }, [testimonials]);
-
-    const stableRotateY = (testimonial) => {
-        if (!testimonial || !testimonial.src) {
-            return 0;
-        }
-        return rotationsBySrc.get(testimonial.src) ?? 0;
-    };
+    const rotationByIndex = useMemo(
+        () => testimonials.map((_, index) => ((index * 7) % 21) - 10),
+        [testimonials]
+    );
+    const getRotation = (index) => rotationByIndex[index] ?? 0;
     return (
         <div className="mx-auto max-w-sm px-4 py-8 font-sans antialiased md:max-w-5xl md:px-8 lg:px-12">
             <div className="relative grid grid-cols-1 gap-20 md:grid-cols-2">
@@ -66,13 +47,13 @@ export const AnimatedTestimonials = ({
                                         opacity: 0,
                                         scale: 0.9,
                                         z: -100,
-                                        rotate: stableRotateY(testimonial),
+                                        rotate: getRotation(index),
                                     }}
                                     animate={{
                                         opacity: isActive(index) ? 1 : 0.7,
                                         scale: isActive(index) ? 1 : 0.95,
                                         z: isActive(index) ? 0 : -100,
-                                        rotate: isActive(index) ? 0 : stableRotateY(testimonial),
+                                        rotate: isActive(index) ? 0 : getRotation(index),
                                         zIndex: isActive(index)
                                             ? 40
                                             : testimonials.length + 2 - index,
@@ -82,7 +63,7 @@ export const AnimatedTestimonials = ({
                                         opacity: 0,
                                         scale: 0.9,
                                         z: 100,
-                                        rotate: stableRotateY(testimonial),
+                                        rotate: getRotation(index),
                                     }}
                                     transition={{
                                         duration: 0.4,

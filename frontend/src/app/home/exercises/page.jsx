@@ -16,7 +16,7 @@ const EXERCISE_COACH_LANGUAGES = voiceLanguages.filter((language) =>
 const EXERCISES = [
   {
     id: "calm-breathing",
-    title: "Calm Breathing Exercise",
+    title: "Calm Breathing",
     description: "A guided breathing pattern that slows the breath and supports calm.",
     imageUrl: "https://cdn.pixabay.com/photo/2022/10/17/18/03/breathing-7528398_1280.jpg",
     imageAlt: "Illustration of a person sitting calmly and practicing breathing outdoors.",
@@ -52,14 +52,9 @@ const EXERCISES = [
 ];
 
 const STAGE_BADGES = {
-  INHALE: "bg-emerald-100 text-emerald-700",
-  HOLD: "bg-amber-100 text-amber-700",
-  EXHALE: "bg-sky-100 text-sky-700",
-  SEE_5: "bg-emerald-100 text-emerald-700",
-  FEEL_4: "bg-teal-100 text-teal-700",
-  HEAR_3: "bg-sky-100 text-sky-700",
-  SMELL_2: "bg-amber-100 text-amber-700",
-  TASTE_1: "bg-rose-100 text-rose-700",
+  INHALE: "bg-emerald-100 text-gray-900 ring-emerald-200",
+  HOLD: "bg-amber-100 text-gray-900 ring-amber-200",
+  EXHALE: "bg-sky-100 text-sky-800 ring-sky-200",
 };
 
 export default function ExercisesPage() {
@@ -206,19 +201,20 @@ export default function ExercisesPage() {
     <>
       <Header
         title="Exercises"
-        subtitle=""
+        subtitle="Guided sessions to help you relax, refocus, and recharge."
       />
 
-      <div className="relative space-y-6 font-google">
+      <div className="relative space-y-8 pb-20">
         {!showExerciseSession ? (
-          <section className="rounded-3xl border border-gray-200 bg-white p-5 shadow-sm">
-            <div className="mb-4 flex items-center justify-between gap-3">
-              <div>
-                <h2 className="text-lg text-gray-800">Available Exercises</h2>
-              </div>
+          <section className="rounded-2xl bg-white p-8 md:p-10 shadow-sm ring-1 ring-black/5 relative overflow-hidden">
+            <div className="pointer-events-none absolute -right-20 -top-20 h-64 w-64 rounded-full bg-emerald-100/40 blur-3xl" />
+            
+            <div className="mb-8 relative z-10 max-w-2xl">
+              <h2 className="text-2xl font-bold tracking-tight text-gray-900">Available Exercises</h2>
+              <p className="mt-2 text-base text-gray-600 leading-relaxed">Choose an exercise below. Your AI coach will guide you through the session in real-time.</p>
             </div>
 
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+            <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3 relative z-10">
               {EXERCISES.map((exercise) => {
                 const isSelected = exercise.id === selectedExerciseId;
 
@@ -235,39 +231,33 @@ export default function ExercisesPage() {
                       lastHandledEventRef.current = null;
                       void coach.endSession();
                     }}
-                    className={`group overflow-hidden rounded-[28px] border p-3 text-left transition-all duration-300 ${
+                    className={`group flex flex-col overflow-hidden rounded-2xl bg-white text-left transition-all duration-300 ring-1 shadow-sm hover:shadow-md hover:-translate-y-1 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 ${
                       isSelected
-                        ? "border-emerald-300 bg-emerald-50 shadow-[0_20px_60px_rgba(16,185,129,0.12)]"
-                        : "border-gray-200 bg-white hover:border-emerald-200 hover:bg-gray-50 hover:shadow-[0_18px_50px_rgba(15,23,42,0.08)]"
+                        ? "ring-emerald-500"
+                        : "ring-gray-200 hover:ring-emerald-300"
                     }`}
                   >
-                    <div className="relative overflow-hidden rounded-[24px] border border-white/70 bg-white shadow-sm">
-                      <div className="pointer-events-none absolute inset-0 z-10 bg-gradient-to-t from-slate-900/72 via-slate-900/16 to-white/10" />
-                      <div className="pointer-events-none absolute inset-x-0 bottom-0 z-10 h-40 bg-gradient-to-t from-slate-900/70 via-slate-900/24 to-transparent" />
-                      <div className="pointer-events-none absolute left-5 top-5 z-20 rounded-full border border-white/35 bg-white/20 px-3 py-1 text-[11px] font-medium tracking-[0.18em] text-white backdrop-blur-md">
-                        EXERCISE
+                    <div className="relative aspect-[16/10] overflow-hidden w-full">
+                      <Image
+                        src={exercise.imageUrl}
+                        alt={exercise.imageAlt}
+                        width={1280}
+                        height={1280}
+                        className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
+                      />
+                      <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-gray-900/80 to-transparent p-5 pt-12">
+                         <h3 className="text-xl font-bold tracking-tight text-white line-clamp-1">{exercise.title}</h3>
                       </div>
-                      <div className="pointer-events-none absolute right-5 top-5 z-20 flex h-11 w-11 items-center justify-center rounded-full border border-white/35 bg-white/20 text-white backdrop-blur-md transition-transform duration-300 group-hover:scale-105">
-                        <span className="ml-0.5 text-lg">+</span>
-                      </div>
-                      <div className="pointer-events-none absolute -left-6 top-8 z-10 h-24 w-24 rounded-full bg-emerald-200/35 blur-2xl" />
-                      <div className="pointer-events-none absolute -right-6 bottom-6 z-10 h-24 w-24 rounded-full bg-sky-200/30 blur-2xl" />
-                      <div className="relative aspect-[16/8.8] overflow-hidden">
-                        <Image
-                          src={exercise.imageUrl}
-                          alt={exercise.imageAlt}
-                          width={1280}
-                          height={1280}
-                          className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.04]"
-                        />
-                      </div>
-
-                      <div className="absolute inset-x-0 bottom-0 z-20 p-6">
-                        <div className="max-w-lg">
-                          <h3 className="text-[30px] font-semibold leading-tight tracking-[0.01em] text-white [text-shadow:0_3px_18px_rgba(15,23,42,0.55)]">
-                            {exercise.title}
-                          </h3>
-                        </div>
+                    </div>
+                    <div className="p-5 flex-1 flex flex-col">
+                      <p className="text-sm font-medium text-gray-600 leading-relaxed mb-4 line-clamp-2 flex-1">{exercise.description}</p>
+                      <div className="flex items-center gap-3 pt-4 border-t border-gray-100 mt-auto">
+                        <span className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-gray-500 bg-gray-50 px-2.5 py-1 rounded">
+                           <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5"><path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg> {exercise.totalDurationLabel}
+                        </span>
+                         <span className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-gray-500 bg-gray-50 px-2.5 py-1 rounded">
+                           {exercise.rhythmLabel}
+                        </span>
                       </div>
                     </div>
                   </button>
@@ -278,185 +268,171 @@ export default function ExercisesPage() {
         ) : (
           <>
             <div
-              className={`pointer-events-none absolute inset-x-0 top-0 z-10 rounded-[2rem] transition-all duration-500 ${
+              className={`pointer-events-none absolute inset-x-0 top-0 z-10 rounded-3xl transition-all duration-700 ease-in-out ${
                 isSessionFocused
-                  ? "h-[320px] bg-white/60 opacity-100 backdrop-blur-[4px]"
+                  ? "h-[450px] bg-white/70 opacity-100 backdrop-blur-md"
                   : "h-0 bg-transparent opacity-0"
               }`}
             />
 
             <section
-              className={`relative z-20 mx-auto w-full max-w-6xl transition-all duration-700 ease-[cubic-bezier(0.22,1,0.36,1)] ${
+              className={`relative z-20 mx-auto w-full transition-all duration-700 ease-[cubic-bezier(0.22,1,0.36,1)] ${
                 isSessionVisible
                   ? "translate-y-0 scale-100 opacity-100"
-                  : "translate-y-10 scale-[0.96] opacity-0"
+                  : "translate-y-16 scale-[0.94] opacity-0"
               }`}
             >
           <div
-            className={`relative overflow-hidden rounded-3xl border border-gray-200 bg-white p-6 transition-all duration-700 ease-out ${
+            className={`relative overflow-hidden rounded-2xl bg-white p-6 md:p-10 transition-all duration-700 ease-out shadow-lg ring-1 ${
               isSessionFocused
-                ? "shadow-[0_30px_100px_rgba(15,23,42,0.18)] ring-1 ring-emerald-100"
-                : "shadow-sm"
+                ? "ring-emerald-200"
+                : "ring-black/5"
             }`}
           >
-            <div
-              className={`pointer-events-none absolute -left-10 -top-10 h-32 w-32 rounded-full bg-[radial-gradient(circle,rgba(16,185,129,0.22),rgba(16,185,129,0))] transition-all duration-700 ${
-                isSessionFocused ? "animate-[pulse_4.2s_ease-in-out_infinite] opacity-100" : "opacity-0"
-              }`}
-            />
-            <div
-              className={`pointer-events-none absolute -right-8 top-8 h-28 w-28 rounded-full bg-[radial-gradient(circle,rgba(34,211,238,0.2),rgba(34,211,238,0))] transition-all duration-700 ${
-                isSessionFocused ? "animate-[pulse_5s_ease-in-out_infinite] opacity-100" : "opacity-0"
-              }`}
-            />
-            <div
-              className={`pointer-events-none absolute bottom-0 left-16 h-24 w-24 rounded-full bg-[radial-gradient(circle,rgba(167,243,208,0.28),rgba(167,243,208,0))] transition-all duration-700 ${
-                isSessionFocused ? "animate-[pulse_3.8s_ease-in-out_infinite] opacity-100" : "opacity-0"
-              }`}
-            />
 
-            <div className="flex flex-wrap items-start justify-between gap-4">
+            <div className="flex flex-wrap items-center justify-between gap-4 mb-8">
               <div>
-                <h2 className="text-2xl font-semibold text-gray-800">{selectedExercise.title}</h2>
+                <h2 className="text-3xl font-bold tracking-tight text-gray-900">{selectedExercise.title}</h2>
+                <p className="mt-2 text-sm font-medium text-gray-500 max-w-xl">{selectedExercise.description}</p>
               </div>
-              <span className="rounded-full bg-gray-100 px-3 py-1 text-xs font-semibold text-gray-600">
-                Session length: {activeExercise.sessionDuration} seconds
+              <span className="rounded-full bg-emerald-50 ring-1 ring-emerald-200 px-4 py-1.5 text-xs font-bold uppercase tracking-wider text-gray-900 shadow-sm flex items-center gap-2">
+                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                {activeExercise.sessionDuration} sec session
               </span>
             </div>
 
-            <div className="mt-8 grid gap-6 md:grid-cols-[0.7fr_1.3fr]">
-              <div className="rounded-3xl border border-gray-100 bg-gray-50 p-6">
-                <div className="flex flex-col items-center justify-center gap-6 text-center">
-                  <div className="relative flex h-64 w-64 items-center justify-center rounded-full border border-emerald-100 bg-white">
+            <div className="grid gap-8 lg:grid-cols-[1fr_1.2fr]">
+              <div className="rounded-2xl ring-1 ring-gray-100 bg-gray-50/50 p-8 flex flex-col items-center justify-center min-h-[400px]">
+                <div className="flex flex-col items-center justify-center gap-8 text-center w-full">
+                  <div className="relative flex h-64 w-64 items-center justify-center rounded-full bg-white shadow-sm ring-1 ring-emerald-100/50">
                     <div
-                      className={`pointer-events-none absolute inset-0 rounded-full bg-[radial-gradient(circle,rgba(16,185,129,0.14),rgba(16,185,129,0)_68%)] transition-all ease-in-out ${orbAuraClass}`}
+                      className={`pointer-events-none absolute inset-0 rounded-full bg-[radial-gradient(circle,rgba(16,185,129,0.1),rgba(16,185,129,0)_70%)] transition-all ease-in-out ${orbAuraClass}`}
                       style={{ transitionDuration: `${Math.max(currentStageDuration, 1)}s` }}
                     />
                     <div
-                      className={`absolute inset-0 rounded-full border border-emerald-100/80 transition-all ease-in-out ${orbRingClass}`}
+                      className={`absolute inset-0 rounded-full ring-1 ring-emerald-200/50 transition-all ease-in-out ${orbRingClass}`}
                       style={{ transitionDuration: `${Math.max(currentStageDuration, 1)}s` }}
                     />
                     <div
-                      className={`absolute inset-5 rounded-full border border-emerald-100 transition-all ease-in-out ${orbRingClass}`}
+                      className={`absolute inset-6 rounded-full ring-1 ring-emerald-200/80 transition-all ease-in-out ${orbRingClass}`}
                       style={{ transitionDuration: `${Math.max(currentStageDuration, 1)}s` }}
                     />
                     <div
-                      className={`absolute inset-10 rounded-full border border-emerald-50 transition-all ease-in-out ${orbRingClass}`}
+                      className={`absolute inset-12 rounded-full ring-1 ring-emerald-300/80 transition-all ease-in-out ${orbRingClass}`}
                       style={{ transitionDuration: `${Math.max(currentStageDuration, 1)}s` }}
                     />
                     <div
-                      className={`absolute h-44 w-44 rounded-full bg-emerald-100/30 blur-2xl transition-all ease-in-out ${orbShadowClass}`}
+                      className={`absolute h-48 w-48 rounded-full bg-emerald-200/30 blur-2xl transition-all ease-in-out ${orbShadowClass}`}
                       style={{ transitionDuration: `${Math.max(currentStageDuration, 1)}s` }}
                     />
                     <div
-                      className={`relative h-32 w-32 rounded-full bg-gradient-to-br from-emerald-300 via-emerald-400 to-teal-300 shadow-[0_18px_50px_rgba(16,185,129,0.28)] transition-transform ease-in-out ${indicatorScaleClass}`}
+                      className={`relative h-32 w-32 rounded-full bg-emerald-400 shadow-lg shadow-emerald-500/30 transition-transform ease-in-out ${indicatorScaleClass} flex items-center justify-center`}
                       style={{ transitionDuration: `${Math.max(currentStageDuration, 1)}s` }}
-                    />
+                    >
+                        {exerciseRunning && (
+                             <span className="text-white font-bold text-3xl tabular-nums animate-pulse drop-shadow-md">{stageTimer}</span>
+                        )}
+                    </div>
                   </div>
 
-                  <div className="space-y-2">
-                    <span
-                      className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${
-                        STAGE_BADGES[currentStageKey] || "bg-gray-100 text-gray-600"
-                      }`}
-                    >
-                      {stageLabel}
-                    </span>
-                    <h3 className="text-2xl font-semibold text-gray-800">{stageLabel}</h3>
-                    <p className="max-w-md text-sm text-gray-500">{currentInstruction}</p>
+                  <div className="space-y-4 max-w-xs">
+                    <div className="flex justify-center">
+                        <span
+                        className={`inline-flex items-center justify-center rounded-full ring-1 px-4 py-1.5 text-xs font-bold uppercase tracking-widest ${
+                            STAGE_BADGES[currentStageKey] || "bg-gray-100 text-gray-600 ring-gray-200"
+                        }`}
+                        >
+                        {stageLabel}
+                        </span>
+                    </div>
+                    <h3 className="text-2xl font-bold tracking-tight text-gray-900">{stageLabel}</h3>
+                    <p className="text-base font-medium text-gray-600 leading-relaxed">{currentInstruction}</p>
                   </div>
                 </div>
               </div>
 
-              <div className="space-y-4 rounded-3xl border border-gray-100 bg-gray-50 p-6">
-                <div className="rounded-2xl border border-gray-200 bg-white p-4">
-                  <p className="text-xs uppercase tracking-wide text-gray-500">
-                    {currentStageKey ? stageLabel : "Timer"}
-                  </p>
-                  <p className="mt-2 text-3xl font-semibold text-gray-800">{stageTimer}s</p>
-                  {exerciseRunning ? (
-                    <p className="mt-2 text-xs text-gray-500">
-                      Synced with the current guided breathing cue.
+              <div className="flex flex-col gap-6">
+                <div className="grid grid-cols-2 gap-4">
+                    <div className="rounded-2xl ring-1 ring-gray-100 bg-white p-5 shadow-sm text-center">
+                    <p className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-1">
+                        {currentStageKey ? stageLabel : "Stage Timer"}
                     </p>
-                  ) : null}
-                </div>
-
-                <div className="w-full rounded-2xl border border-gray-200 bg-white p-4">
-                  <p className="text-xs uppercase tracking-wide text-gray-500">Voice Guidance</p>
-                  <div className="mt-3 space-y-3">
-                    <div className="overflow-hidden rounded-2xl border border-gray-100 bg-gray-50">
-                      <div className="border-b border-gray-100 bg-white px-4 py-3">
-                        <div className="flex items-center justify-between gap-3">
-                          <div>
-                            <p className="text-sm font-medium text-gray-700">Coach language</p>
-                            <p className="mt-1 text-xs text-gray-500">
-                              Select the voice for your guided session.
-                            </p>
-                          </div>
-                          <div className="h-10 w-10 rounded-full border border-emerald-100 bg-emerald-50" />
-                        </div>
-                      </div>
-
-                      <div className="p-2">
-                        {EXERCISE_COACH_LANGUAGES.map((language) => {
-                          const isSelected = selectedLanguageCode === language.code;
-
-                          return (
-                            <button
-                              key={language.code}
-                              type="button"
-                              onClick={() => setSelectedLanguageCode(language.code)}
-                              disabled={exerciseRunning || coach.isStarting}
-                              className={`flex w-full items-center justify-between rounded-xl px-3 py-3 text-left transition-colors ${
-                                isSelected
-                                  ? "bg-emerald-50 text-emerald-800"
-                                  : "bg-transparent text-gray-700 hover:bg-white"
-                              } disabled:cursor-not-allowed disabled:opacity-70`}
-                            >
-                              <div>
-                                <p className="text-sm font-semibold">{language.label}</p>
-                                <p className="mt-1 text-xs text-gray-500">{language.nativeLabel}</p>
-                              </div>
-                              <span
-                                className={`inline-flex h-5 w-5 items-center justify-center rounded-full border ${
-                                  isSelected
-                                    ? "border-emerald-500 bg-emerald-500 text-white"
-                                    : "border-gray-300 bg-white"
-                                }`}
-                              >
-                                {isSelected ? (
-                                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none">
-                                    <path
-                                      d="M5 13L9 17L19 7"
-                                      stroke="currentColor"
-                                      strokeWidth="3"
-                                      strokeLinecap="round"
-                                      strokeLinejoin="round"
-                                    />
-                                  </svg>
-                                ) : null}
-                              </span>
-                            </button>
-                          );
-                        })}
-                      </div>
+                    <p className="text-4xl font-bold tracking-tight text-gray-900 tabular-nums">{stageTimer}s</p>
+                    {exerciseRunning && (
+                        <p className="mt-2 text-[11px] font-bold uppercase tracking-wider text-gray-700 flex items-center justify-center gap-1.5">
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span> Active
+                        </p>
+                    )}
                     </div>
+                    <div className="rounded-2xl ring-1 ring-gray-100 bg-white p-5 shadow-sm text-center">
+                    <p className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-1">
+                        Total Time
+                    </p>
+                    <p className="text-4xl font-bold tracking-tight text-gray-900 tabular-nums">{sessionTimer}s</p>
+                     {exerciseRunning && (
+                        <p className="mt-2 text-[11px] font-bold uppercase tracking-wider text-gray-700 flex items-center justify-center gap-1.5">
+                        Remaining
+                        </p>
+                    )}
+                    </div>
+                </div>
+
+                <div className="flex-1 rounded-2xl ring-1 ring-gray-100 bg-white shadow-sm overflow-hidden flex flex-col">
+                  <div className="bg-gray-50/80 px-5 py-4 border-b border-gray-100 flex items-center justify-between">
+                     <div>
+                        <p className="text-sm font-bold tracking-tight text-gray-900">Voice Coach Language</p>
+                        <p className="text-xs font-medium text-gray-500 mt-0.5">Select the voice for guided cues.</p>
+                     </div>
+                     <div className="h-10 w-10 rounded-full bg-emerald-100 ring-1 ring-emerald-200 flex items-center justify-center">
+                         <svg className="w-5 h-5 text-gray-700" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" /></svg>
+                     </div>
+                  </div>
+
+                  <div className="p-3 flex-1 flex flex-col gap-2">
+                    {EXERCISE_COACH_LANGUAGES.map((language) => {
+                        const isSelected = selectedLanguageCode === language.code;
+
+                        return (
+                        <button
+                            key={language.code}
+                            type="button"
+                            onClick={() => setSelectedLanguageCode(language.code)}
+                            disabled={exerciseRunning || coach.isStarting}
+                            className={`flex w-full items-center justify-between rounded-xl px-4 py-3 text-left transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 ${
+                            isSelected
+                                ? "ring-1 ring-emerald-200 bg-emerald-50/80 shadow-sm"
+                                : "bg-transparent text-gray-700 hover:bg-gray-50 hover:ring-1 hover:ring-gray-200"
+                            } disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:ring-0 disabled:hover:bg-transparent`}
+                        >
+                            <div>
+                            <p className={`text-sm tracking-tight ${isSelected ? "font-bold text-gray-900" : "font-semibold"}`}>{language.label}</p>
+                            <p className={`mt-0.5 text-xs font-medium ${isSelected ? "text-gray-800" : "text-gray-500"}`}>{language.nativeLabel}</p>
+                            </div>
+                            {isSelected && (
+                                <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-emerald-500 text-white shadow-sm shadow-emerald-500/20">
+                                   <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M5 13l4 4L19 7" /></svg>
+                                </span>
+                            )}
+                        </button>
+                        );
+                    })}
                   </div>
                 </div>
 
-                {completionMessage ? (
-                  <div className="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-700">
-                    {completionMessage}
+                {completionMessage && (
+                  <div className="rounded-xl ring-1 ring-emerald-200 bg-emerald-50 px-5 py-4 text-sm font-bold text-gray-900 shadow-sm flex items-center gap-3">
+                    <span className="text-xl">🎉</span> {completionMessage}
                   </div>
-                ) : null}
+                )}
 
-                {coach.error ? (
-                  <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
+                {coach.error && (
+                  <div className="rounded-xl ring-1 ring-red-200 bg-red-50 px-5 py-4 text-sm font-medium text-gray-800 shadow-sm flex items-center gap-3">
+                     <svg className="w-5 h-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5"><path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
                     {coach.error}
                   </div>
-                ) : null}
+                )}
 
-                <div className="flex flex-wrap justify-end gap-3">
+                <div className="flex flex-wrap items-center justify-end gap-3 mt-2">
                   <button
                     type="button"
                     onClick={() => {
@@ -467,26 +443,26 @@ export default function ExercisesPage() {
                       resetExercise();
                       void coach.endSession();
                     }}
-                    className="rounded-xl border border-gray-300 bg-white px-5 py-2.5 text-sm font-semibold text-gray-700 transition-colors hover:bg-gray-50"
+                    className="rounded-xl bg-white ring-1 ring-gray-200 px-6 py-3 text-sm font-bold text-gray-700 transition-all duration-200 hover:bg-gray-50 hover:text-gray-900 active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
                   >
-                    Back
-                  </button>
-                  <button
-                    type="button"
-                    onClick={handleStartExercise}
-                    disabled={coach.isStarting}
-                    className="rounded-xl bg-emerald-600 px-6 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-emerald-700 disabled:cursor-not-allowed disabled:bg-emerald-300"
-                  >
-                    {coach.isStarting ? "Connecting Coach..." : "Start Exercise"}
+                    Back to Selection
                   </button>
                   <button
                     type="button"
                     onClick={() => {
                       void handleResetExercise();
                     }}
-                    className="rounded-xl border border-gray-300 bg-white px-5 py-2.5 text-sm font-semibold text-gray-700 transition-colors hover:bg-gray-50"
+                    className="rounded-xl bg-white ring-1 ring-gray-200 px-6 py-3 text-sm font-bold text-gray-700 transition-all duration-200 hover:bg-gray-50 hover:text-gray-900 active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
                   >
                     Reset
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleStartExercise}
+                    disabled={coach.isStarting || exerciseRunning}
+                    className="rounded-xl bg-emerald-600 px-8 py-3 text-sm font-bold text-white shadow-sm transition-all duration-200 hover:bg-emerald-700 hover:shadow-md active:scale-[0.98] disabled:cursor-not-allowed disabled:bg-emerald-400 disabled:shadow-none focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 cursor-pointer"
+                  >
+                    {coach.isStarting ? "Connecting Coach..." : "Start Exercise"}
                   </button>
                 </div>
               </div>
