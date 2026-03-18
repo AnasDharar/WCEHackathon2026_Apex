@@ -1,5 +1,6 @@
 "use client";
 import { useState, useRef } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { NotificationProvider } from "@/context/NotificationContext";
@@ -21,6 +22,14 @@ const HabitIcon = () => (
 const ChatbotIcon = () => (
   <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
     <path d="M12 8V4H8" /><rect width="16" height="12" x="4" y="8" rx="2" /><path d="M2 14h2" /><path d="M20 14h2" /><path d="M15 13v2" /><path d="M9 13v2" />
+  </svg>
+);
+
+const TherapyRoomIcon = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M3 21h18"/>
+    <path d="M5 21V7l7-4 7 4v14"/>
+    <path d="M9 21v-6h6v6"/>
   </svg>
 );
 
@@ -54,11 +63,19 @@ const HelpIcon = () => (
   </svg>
 );
 
+const ExercisesIcon = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M8 4h8"/><path d="M9 2v4"/><path d="M15 2v4"/><path d="M12 10v10"/><path d="M8 14h8"/><path d="M6 22h12"/>
+  </svg>
+);
+
 // Navigation items
 const navItems = [
   { id: "overview", label: "Overview", icon: OverviewIcon, href: "/home" },
   { id: "habit-tracker", label: "Habit Tracker", icon: HabitIcon, href: "/home/habit-tracker" },
   { id: "ai-chatbot", label: "AI Assistant", icon: ChatbotIcon, href: "/home/ai-chatbot" },
+  { id: "voice-assistant", label: "Therapy Room", icon: TherapyRoomIcon, href: "/home/voice-assistant" },
+  { id: "exercises", label: "Exercises", icon: ExercisesIcon, href: "/home/exercises" },
   { id: "resources", label: "Resources", icon: ResourcesIcon, href: "/home/resources" },
   { id: "appointments", label: "Appointments", icon: AppointmentsIcon, href: "/home/appointments" },
   { id: "events", label: "Events", icon: EventsIcon, href: "/home/events" },
@@ -79,6 +96,7 @@ export default function HomeLayout({ children }) {
             } ${box_shadow} bg-white rounded-[24px] h-full flex flex-col transition-all duration-300 ease-in-out`}
         >
 
+<<<<<<< HEAD
           {/* Logo Area */}
           <div className="p-8 flex items-center">
             <div>
@@ -96,8 +114,32 @@ export default function HomeLayout({ children }) {
                   className="w-full h-auto" />
               )}
             </div>
+=======
+        {/* Logo Area */}
+        <div className="p-4 flex justify-center items-center">
+          <div className="">
+            {!sidebarCollapsed && (
+              <Image
+                src="/logo_1.jpeg"
+                alt="Manah Arogya"
+                className="h-9 w-auto object-contain"
+                width={144}
+                height={36}
+              />
+            )}
+            {sidebarCollapsed && (
+              <Image
+                src="/logo_1_short.png"
+                alt="Logo Icon"
+                className="w-8 h-auto"
+                width={32}
+                height={32}
+              />
+            )}
+>>>>>>> 322f94523b3211670534a449443f2df78669a785
           </div>
 
+<<<<<<< HEAD
           {/* Divider */}
           <div className="mx-4 border-t border-neutral-100" />
 
@@ -140,6 +182,31 @@ export default function HomeLayout({ children }) {
             </a>
           </div>
         </aside>
+=======
+        {/* Navigation */}
+        <nav className="flex-1 p-3 space-y-1 overflow-y-auto">
+          {navItems.map((item) => {
+            const Icon = item.icon;
+            const isActive = pathname === item.href;
+            return (
+              <Link
+                key={item.id}
+                href={item.href}
+                className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 ${
+                  isActive
+                    ? "bg-emerald-100 text-emerald-700 font-medium"
+                    : "text-gray-600 hover:bg-gray-100 hover:text-gray-800"
+                } ${sidebarCollapsed ? "justify-center" : ""}`}
+                title={sidebarCollapsed ? item.label : ""}
+              >
+                {Icon ? <Icon /> : null}
+                {!sidebarCollapsed && <span className="text-sm">{item.label}</span>}
+              </Link>
+            );
+          })}
+        </nav>
+      </aside>
+>>>>>>> 322f94523b3211670534a449443f2df78669a785
       </div>
 
       {/* Main Content */}

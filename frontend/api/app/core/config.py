@@ -42,6 +42,10 @@ class Settings:
         _clean_env(os.getenv("CORS_ALLOW_ORIGIN_REGEX"))
         or r"https?://(localhost|127\.0\.0\.1)(:\d+)?$"
     )
+    livekit_url: str | None = _clean_env(os.getenv("LIVEKIT_URL"))
+    livekit_api_key: str | None = _clean_env(os.getenv("LIVEKIT_API_KEY"))
+    livekit_api_secret: str | None = _clean_env(os.getenv("LIVEKIT_API_SECRET"))
+    livekit_token_ttl_minutes: int = int(_clean_env(os.getenv("LIVEKIT_TOKEN_TTL_MINUTES")) or "60")
 
     @property
     def cors_origins(self) -> list[str]:
