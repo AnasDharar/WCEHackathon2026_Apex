@@ -1079,7 +1079,7 @@ export default function ExercisesPage() {
     startRequestInFlightRef.current = true;
     lastHandledEventRef.current = null;
     try {
-      const connected = coach.isConnected ? true : await coach.startSession();
+      const connected = await coach.startSession();
 
       if (!connected) {
         return;

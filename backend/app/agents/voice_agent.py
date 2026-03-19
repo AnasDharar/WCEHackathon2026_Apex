@@ -17,6 +17,79 @@ SARVAM_API_KEY = os.getenv("SARVAM_API_KEY")
 LIVEKIT_URL = os.getenv("LIVEKIT_URL")
 LIVEKIT_API_KEY = os.getenv("LIVEKIT_API_KEY")
 LIVEKIT_API_SECRET = os.getenv("LIVEKIT_API_SECRET")
+VOICE_AGENT_NAME = "mental-health-voice"
+GREETING_PLAYBACK_DELAY_SECONDS = 0.6
+
+
+async def _sarvam_run_with_mp3_output(self, output_emitter) -> None:
+    request_id = sarvam.tts.utils.shortuuid()
+    self._client_request_id = request_id
+    self._server_request_id = None
+    output_emitter.initialize(
+        request_id=request_id,
+        sample_rate=self._opts.speech_sample_rate,
+        num_channels=1,
+        mime_type="audio/mpeg",
+        stream=True,
+        frame_size_ms=50,
+    )
+
+    async def _tokenize_input() -> None:
+        word_stream = None
+        async for input_value in self._input_ch:
+            if isinstance(input_value, str):
+                if word_stream is None:
+                    tokenizer_instance = (
+                        self._opts.word_tokenizer
+                        if self._opts.word_tokenizer is not None
+                        else sarvam.tts.tokenize.basic.SentenceTokenizer()
+                    )
+                    word_stream = tokenizer_instance.stream()
+                    self._segments_ch.send_nowait(word_stream)
+                word_stream.push_text(input_value)
+            elif isinstance(input_value, self._FlushSentinel):
+                if word_stream:
+                    word_stream.end_input()
+                word_stream = None
+
+        if word_stream is not None:
+            word_stream.end_input()
+
+        self._segments_ch.close()
+
+    async def _process_segments() -> None:
+        async for word_stream in self._segments_ch:
+            await self._run_ws(word_stream, output_emitter)
+
+    tasks = [
+        asyncio.create_task(_tokenize_input()),
+        asyncio.create_task(_process_segments()),
+    ]
+    try:
+        await asyncio.gather(*tasks)
+    except (
+        sarvam.tts.APIStatusError,
+        sarvam.tts.APIConnectionError,
+        sarvam.tts.APITimeoutError,
+    ):
+        raise
+    except asyncio.TimeoutError:
+        raise sarvam.tts.APITimeoutError() from None
+    except sarvam.tts.aiohttp.ClientResponseError as exc:
+        raise sarvam.tts.APIStatusError(
+            message=exc.message,
+            status_code=exc.status,
+            request_id=request_id,
+            body=None,
+        ) from None
+    except Exception as exc:
+        raise sarvam.tts.APIConnectionError(f"TTS stream failed: {exc}") from exc
+    finally:
+        await sarvam.tts.utils.aio.gracefully_cancel(*tasks)
+        output_emitter.end_input()
+
+
+sarvam.tts.SynthesizeStream._run = _sarvam_run_with_mp3_output
 
 LANGUAGE_PROFILES = {
     "en-IN": {"label": "English", "instruction_name": "English"},
@@ -1056,6 +1129,7 @@ def _exercise_language_pack(exercise_profile: dict[str, str], language_code: str
 async def entrypoint(ctx) -> None:
     _require_env()
     await ctx.connect()
+    primary_participant = await ctx.wait_for_participant()
 
     room_type, profile_id, language_code = _parse_room_context(getattr(ctx.room, "name", ""))
     language_profile = LANGUAGE_PROFILES[language_code]
@@ -1076,12 +1150,12 @@ async def entrypoint(ctx) -> None:
             agent=ExerciseCoachAgent(exercise_profile, language_profile, language_code),
             room=ctx.room,
         )
+        await asyncio.sleep(GREETING_PLAYBACK_DELAY_SECONDS)
 
         speech_lock = asyncio.Lock()
-        linked_participant = session.room_io.linked_participant
         user_name = _safe_user_name(
-            getattr(linked_participant, "name", None),
-            getattr(linked_participant, "identity", None),
+            getattr(primary_participant, "name", None),
+            getattr(primary_participant, "identity", None),
         )
         exercise_pack = _exercise_language_pack(exercise_profile, language_code)
         active_task: asyncio.Task | None = None
@@ -1200,11 +1274,11 @@ async def entrypoint(ctx) -> None:
         agent=MentalHealthAgent(doctor_profile, language_profile, language_code),
         room=ctx.room,
     )
+    await asyncio.sleep(GREETING_PLAYBACK_DELAY_SECONDS)
 
-    linked_participant = session.room_io.linked_participant
     user_name = _safe_user_name(
-        getattr(linked_participant, "name", None),
-        getattr(linked_participant, "identity", None),
+        getattr(primary_participant, "name", None),
+        getattr(primary_participant, "identity", None),
     )
     opening_greeting = _build_opening_greeting(
         doctor_id=profile_id,
@@ -1262,5 +1336,6 @@ if __name__ == "__main__":
     cli.run_app(
         WorkerOptions(
             entrypoint_fnc=entrypoint,
+            agent_name=VOICE_AGENT_NAME,
         )
     )

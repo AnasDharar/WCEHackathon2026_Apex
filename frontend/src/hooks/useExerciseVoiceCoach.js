@@ -12,6 +12,10 @@ const COACH_PHASES = {
   error: "error",
 };
 
+const AUDIO_PLAYBACK_BLOCKED_ERROR =
+  "Browser blocked coach audio. Start the exercise again if you do not hear the voice guide.";
+const COACH_JOIN_TIMEOUT_MS = 10000;
+
 function buildExerciseRoomName(exerciseId, languageCode) {
   const suffix =
     typeof crypto !== "undefined" && typeof crypto.randomUUID === "function"
@@ -42,6 +46,72 @@ function decodePayload(data) {
   } catch {
     return null;
   }
+}
+
+function hasRemoteParticipant(room) {
+  if (!room) {
+    return false;
+  }
+
+  return Array.from(room.remoteParticipants.values()).some(
+    (participant) => participant.identity !== room.localParticipant.identity,
+  );
+}
+
+function waitForRemoteParticipant(room, timeoutMs = COACH_JOIN_TIMEOUT_MS) {
+  if (!room || room.state !== ConnectionState.Connected) {
+    return Promise.resolve(false);
+  }
+
+  if (hasRemoteParticipant(room)) {
+    return Promise.resolve(true);
+  }
+
+  return new Promise((resolve) => {
+    let settled = false;
+
+    const finish = (value) => {
+      if (settled) {
+        return;
+      }
+
+      settled = true;
+      clearTimeout(timeoutId);
+      room.off(RoomEvent.ParticipantConnected, handleParticipantConnected);
+      room.off(RoomEvent.TrackSubscribed, handleTrackSubscribed);
+      room.off(RoomEvent.ConnectionStateChanged, handleConnectionStateChanged);
+      resolve(value);
+    };
+
+    const handleParticipantConnected = (participant) => {
+      if (participant.identity !== room.localParticipant.identity) {
+        finish(true);
+      }
+    };
+
+    const handleTrackSubscribed = (_track, publication, participant) => {
+      if (
+        publication.kind === Track.Kind.Audio &&
+        participant.identity !== room.localParticipant.identity
+      ) {
+        finish(true);
+      }
+    };
+
+    const handleConnectionStateChanged = (nextState) => {
+      if (nextState === ConnectionState.Disconnected) {
+        finish(false);
+      }
+    };
+
+    const timeoutId = setTimeout(() => {
+      finish(hasRemoteParticipant(room));
+    }, timeoutMs);
+
+    room.on(RoomEvent.ParticipantConnected, handleParticipantConnected);
+    room.on(RoomEvent.TrackSubscribed, handleTrackSubscribed);
+    room.on(RoomEvent.ConnectionStateChanged, handleConnectionStateChanged);
+  });
 }
 
 export function useExerciseVoiceCoach(exerciseId, languageCode = "en-IN") {
@@ -90,7 +160,19 @@ export function useExerciseVoiceCoach(exerciseId, languageCode = "en-IN") {
     }
 
     if (roomRef.current?.state === ConnectionState.Connected) {
-      return true;
+      if (agentConnected || hasRemoteParticipant(roomRef.current)) {
+        if (!agentConnected && hasRemoteParticipant(roomRef.current)) {
+          setAgentConnected(true);
+        }
+        return true;
+      }
+
+      const ready = await waitForRemoteParticipant(roomRef.current);
+      if (!ready) {
+        setPhase(COACH_PHASES.error);
+        setError("Exercise coach did not join the room. Please try again.");
+      }
+      return ready;
     }
 
     if (phase === COACH_PHASES.connecting) {
@@ -114,16 +196,41 @@ export function useExerciseVoiceCoach(exerciseId, languageCode = "en-IN") {
         const identity = buildCoachIdentity(exerciseId, languageCode);
         setSessionIdentity(identity);
 
+        const nextRoom = new Room({
+          adaptiveStream: true,
+          dynacast: true,
+        });
+
+        const clearAudioPlaybackError = () => {
+          setError((currentError) =>
+            currentError === AUDIO_PLAYBACK_BLOCKED_ERROR ? "" : currentError
+          );
+        };
+
+        const handleAudioPlaybackStatusChanged = () => {
+          if (nextRoom.canPlaybackAudio) {
+            clearAudioPlaybackError();
+            return;
+          }
+
+          setError(AUDIO_PLAYBACK_BLOCKED_ERROR);
+        };
+
+        nextRoom.on(RoomEvent.AudioPlaybackStatusChanged, handleAudioPlaybackStatusChanged);
+        roomRef.current = nextRoom;
+        setRoom(nextRoom);
+
+        try {
+          await nextRoom.startAudio();
+        } catch {
+          // Browsers can reject autoplay unlocking; LiveKit will keep reporting playback status.
+        }
+
         const tokenResponse = await api.get("/voice/token", {
           params: {
             room_name: identity.roomName,
             participant_name: identity.participantName,
           },
-        });
-
-        const nextRoom = new Room({
-          adaptiveStream: true,
-          dynacast: true,
         });
 
         const handleConnectionStateChanged = (nextState) => {
@@ -204,14 +311,27 @@ export function useExerciseVoiceCoach(exerciseId, languageCode = "en-IN") {
           .on(RoomEvent.TrackSubscribed, handleTrackSubscribed)
           .on(RoomEvent.DataReceived, handleDataReceived);
 
-        roomRef.current = nextRoom;
-        setRoom(nextRoom);
-
         await nextRoom.prepareConnection(tokenResponse.server_url, tokenResponse.token);
         await nextRoom.connect(tokenResponse.server_url, tokenResponse.token);
         await nextRoom.localParticipant.setMicrophoneEnabled(false);
-        await nextRoom.startAudio();
 
+        if (nextRoom.canPlaybackAudio) {
+          clearAudioPlaybackError();
+        }
+
+        const agentJoined = await waitForRemoteParticipant(nextRoom);
+        if (!agentJoined) {
+          await disconnectRoom(nextRoom);
+          roomRef.current = null;
+          setRoom(null);
+          setConnectionState(ConnectionState.Disconnected);
+          setPhase(COACH_PHASES.error);
+          setAgentConnected(false);
+          setError("Exercise coach did not join the room. Please try again.");
+          return false;
+        }
+
+        setAgentConnected(true);
         setPhase(COACH_PHASES.ready);
         return true;
       } catch (caughtError) {
