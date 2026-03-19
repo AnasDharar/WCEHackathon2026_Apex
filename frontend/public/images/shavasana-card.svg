@@ -1,0 +1,64 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900" role="img" aria-label="Shavasana deep relaxation illustration">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#ecfeff"/>
+      <stop offset="0.55" stop-color="#eef2ff"/>
+      <stop offset="1" stop-color="#fff7ed"/>
+    </linearGradient>
+    <radialGradient id="halo" cx="52%" cy="40%" r="62%">
+      <stop offset="0" stop-color="#38bdf8" stop-opacity="0.22"/>
+      <stop offset="0.55" stop-color="#a78bfa" stop-opacity="0.14"/>
+      <stop offset="1" stop-color="#0f172a" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="blur22" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="22"/>
+    </filter>
+    <filter id="shadow" x="-30%" y="-30%" width="160%" height="160%">
+      <feDropShadow dx="0" dy="18" stdDeviation="18" flood-color="#0f172a" flood-opacity="0.16"/>
+    </filter>
+  </defs>
+
+  <rect width="1600" height="900" fill="url(#bg)"/>
+  <circle cx="560" cy="350" r="520" fill="url(#halo)" filter="url(#blur22)"/>
+  <circle cx="1160" cy="520" r="520" fill="url(#halo)" filter="url(#blur22)"/>
+
+  <path d="M0 760 C 260 690, 560 830, 880 770 C 1180 715, 1370 790, 1600 740 L 1600 900 L 0 900 Z"
+        fill="#0f172a" opacity="0.08"/>
+
+  <!-- title glass -->
+  <g filter="url(#shadow)">
+    <rect x="120" y="120" width="560" height="180" rx="34" fill="#ffffff" fill-opacity="0.28" stroke="#ffffff" stroke-opacity="0.4"/>
+  </g>
+  <g fill="#0f172a">
+    <text x="168" y="205" font-size="44" font-weight="650"
+          font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial">
+      Shavasana
+    </text>
+    <text x="168" y="252" font-size="22" opacity="0.68"
+          font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial">
+      Deep relaxation
+    </text>
+  </g>
+
+  <!-- shavasana figure -->
+  <g transform="translate(1010 585)">
+    <!-- mat -->
+    <path d="M-360 200 C -220 170, 220 170, 360 200 C 390 206, 390 260, 360 270 C 220 312, -220 312, -360 270 C -390 260, -390 206, -360 200 Z"
+          fill="#0f172a" opacity="0.11"/>
+
+    <!-- body (lying) -->
+    <rect x="-260" y="88" width="520" height="88" rx="44" fill="#10b981" opacity="0.80"/>
+    <circle cx="-290" cy="132" r="48" fill="#ffd7c2"/>
+    <path d="M-322 122 C -305 95, -275 92, -252 112" fill="#0f172a" opacity="0.28"/>
+
+    <!-- arms -->
+    <path d="M-160 176 C -210 208, -250 210, -290 202" fill="none" stroke="#ffd7c2" stroke-width="22" stroke-linecap="round"/>
+    <path d="M160 176 C 210 208, 250 210, 290 202" fill="none" stroke="#ffd7c2" stroke-width="22" stroke-linecap="round"/>
+
+    <!-- soft breathing waves -->
+    <g opacity="0.7">
+      <path d="M-40 40 C 40 18, 120 18, 200 40" fill="none" stroke="#38bdf8" stroke-width="10" stroke-linecap="round" filter="url(#blur22)"/>
+      <path d="M-80 18 C 10 -8, 120 -8, 240 18" fill="none" stroke="#a78bfa" stroke-width="10" stroke-linecap="round" filter="url(#blur22)"/>
+    </g>
+  </g>
+</svg>

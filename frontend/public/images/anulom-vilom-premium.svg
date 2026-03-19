@@ -1,0 +1,84 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900" role="img" aria-label="Yoga breathing illustration">
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#ecfeff"/>
+      <stop offset="0.45" stop-color="#eafff3"/>
+      <stop offset="1" stop-color="#fff7ed"/>
+    </linearGradient>
+    <linearGradient id="glass" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ffffff" stop-opacity="0.75"/>
+      <stop offset="1" stop-color="#ffffff" stop-opacity="0.12"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="50%" cy="35%" r="60%">
+      <stop offset="0" stop-color="#34d399" stop-opacity="0.35"/>
+      <stop offset="0.55" stop-color="#38bdf8" stop-opacity="0.16"/>
+      <stop offset="1" stop-color="#0f172a" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="blur24" x="-40%" y="-40%" width="180%" height="180%">
+      <feGaussianBlur stdDeviation="24"/>
+    </filter>
+    <filter id="shadow" x="-30%" y="-30%" width="160%" height="160%">
+      <feDropShadow dx="0" dy="18" stdDeviation="18" flood-color="#0f172a" flood-opacity="0.18"/>
+    </filter>
+  </defs>
+
+  <!-- background -->
+  <rect width="1600" height="900" fill="url(#sky)"/>
+  <circle cx="520" cy="350" r="520" fill="url(#glow)" filter="url(#blur24)"/>
+  <circle cx="1160" cy="520" r="520" fill="url(#glow)" filter="url(#blur24)"/>
+
+  <!-- soft horizon shapes -->
+  <path d="M0 700 C 260 610, 520 770, 820 700 C 1120 630, 1320 740, 1600 670 L 1600 900 L 0 900 Z"
+        fill="#0f172a" opacity="0.06"/>
+  <path d="M0 760 C 220 690, 560 830, 880 770 C 1180 715, 1370 790, 1600 740 L 1600 900 L 0 900 Z"
+        fill="#0f172a" opacity="0.085"/>
+
+  <!-- card-like glass panel -->
+  <g filter="url(#shadow)">
+    <rect x="120" y="120" width="560" height="180" rx="34" fill="url(#glass)" stroke="#ffffff" stroke-opacity="0.35"/>
+  </g>
+
+  <!-- subtle title (matches style of first card: clean + unobtrusive) -->
+  <g fill="#0f172a">
+    <text x="168" y="200" font-size="44" font-weight="650"
+          font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial">
+      Anulom Vilom
+    </text>
+    <text x="168" y="246" font-size="22" opacity="0.68"
+          font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial">
+      Alternate nostril breathing
+    </text>
+  </g>
+
+  <!-- figure -->
+  <g transform="translate(980 520)">
+    <!-- mat -->
+    <path d="M-260 240 C -160 210, 160 210, 260 240 C 280 246, 280 286, 260 294 C 160 328, -160 328, -260 294 C -280 286, -280 246, -260 240 Z"
+          fill="#0f172a" opacity="0.12"/>
+
+    <!-- torso -->
+    <path d="M-120 30 C -80 -40, -40 -70, 0 -70 C 40 -70, 80 -40, 120 30
+             C 100 86, 70 120, 0 120 C -70 120, -100 86, -120 30 Z"
+          fill="#0ea5e9" opacity="0.9"/>
+
+    <!-- head -->
+    <circle cx="0" cy="-140" r="66" fill="#ffd7c2"/>
+    <path d="M-66 -140 C -30 -200, 30 -200, 66 -140" fill="#0f172a" opacity="0.55"/>
+    <path d="M-18 -150 C -10 -160, 10 -160, 18 -150" fill="none" stroke="#0f172a" stroke-opacity="0.25" stroke-width="8" stroke-linecap="round"/>
+
+    <!-- legs (crossed) -->
+    <path d="M-220 210 C -130 120, -60 112, 0 132 C 60 112, 130 120, 220 210"
+          fill="none" stroke="#0f172a" stroke-opacity="0.34" stroke-width="34" stroke-linecap="round"/>
+    <path d="M-170 220 C -80 170, -35 158, 0 170 C 35 158, 80 170, 170 220"
+          fill="none" stroke="#0f172a" stroke-opacity="0.22" stroke-width="26" stroke-linecap="round"/>
+
+    <!-- arms -->
+    <path d="M-118 55 C -190 40, -230 70, -245 115" fill="none" stroke="#ffd7c2" stroke-width="26" stroke-linecap="round"/>
+    <path d="M118 55 C 190 40, 230 70, 245 115" fill="none" stroke="#ffd7c2" stroke-width="26" stroke-linecap="round"/>
+
+    <!-- alternate nostril cue -->
+    <path d="M38 -126 C 82 -146, 122 -148, 168 -136" fill="none" stroke="#34d399" stroke-width="10" stroke-linecap="round" opacity="0.75" filter="url(#blur24)"/>
+    <path d="M-38 -126 C -82 -146, -122 -148, -168 -136" fill="none" stroke="#38bdf8" stroke-width="10" stroke-linecap="round" opacity="0.75" filter="url(#blur24)"/>
+    <path d="M-6 -118 C 14 -110, 26 -100, 32 -86" fill="none" stroke="#0f172a" stroke-opacity="0.22" stroke-width="10" stroke-linecap="round"/>
+  </g>
+</svg>

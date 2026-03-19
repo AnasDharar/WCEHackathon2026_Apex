@@ -1,0 +1,77 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900" role="img" aria-label="Bhramari pranayama illustration">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#e7fff3"/>
+      <stop offset="0.55" stop-color="#eff7ff"/>
+      <stop offset="1" stop-color="#fff3e6"/>
+    </linearGradient>
+    <radialGradient id="halo" cx="50%" cy="40%" r="65%">
+      <stop offset="0" stop-color="#22c55e" stop-opacity="0.28"/>
+      <stop offset="0.55" stop-color="#38bdf8" stop-opacity="0.16"/>
+      <stop offset="1" stop-color="#0f172a" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="blur18" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="18"/>
+    </filter>
+    <filter id="shadow" x="-30%" y="-30%" width="160%" height="160%">
+      <feDropShadow dx="0" dy="18" stdDeviation="18" flood-color="#0f172a" flood-opacity="0.16"/>
+    </filter>
+  </defs>
+
+  <rect width="1600" height="900" fill="url(#bg)"/>
+  <circle cx="540" cy="360" r="520" fill="url(#halo)" filter="url(#blur18)"/>
+  <circle cx="1160" cy="520" r="520" fill="url(#halo)" filter="url(#blur18)"/>
+
+  <!-- soft ground -->
+  <path d="M0 740 C 260 655, 520 820, 860 745 C 1180 676, 1360 770, 1600 710 L 1600 900 L 0 900 Z"
+        fill="#0f172a" opacity="0.075"/>
+
+  <!-- subtle glass title panel -->
+  <g filter="url(#shadow)">
+    <rect x="120" y="120" width="640" height="190" rx="34" fill="#ffffff" fill-opacity="0.30" stroke="#ffffff" stroke-opacity="0.40"/>
+  </g>
+  <g fill="#0f172a">
+    <text x="168" y="205" font-size="44" font-weight="650"
+          font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial">
+      Bhramari Pranayama
+    </text>
+    <text x="168" y="252" font-size="22" opacity="0.68"
+          font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial">
+      Humming bee breathing
+    </text>
+  </g>
+
+  <!-- figure -->
+  <g transform="translate(980 535)">
+    <!-- mat -->
+    <path d="M-260 230 C -160 205, 160 205, 260 230 C 280 236, 280 276, 260 284 C 160 318, -160 318, -260 284 C -280 276, -280 236, -260 230 Z"
+          fill="#0f172a" opacity="0.11"/>
+
+    <!-- torso -->
+    <path d="M-120 20 C -80 -55, -40 -82, 0 -82 C 40 -82, 80 -55, 120 20
+             C 98 78, 70 110, 0 110 C -70 110, -98 78, -120 20 Z"
+          fill="#10b981" opacity="0.88"/>
+
+    <!-- head -->
+    <circle cx="0" cy="-150" r="66" fill="#ffd7c2"/>
+    <path d="M-66 -150 C -30 -212, 30 -212, 66 -150" fill="#0f172a" opacity="0.52"/>
+    <path d="M-20 -162 C -12 -172, 12 -172, 20 -162" fill="none" stroke="#0f172a" stroke-opacity="0.22" stroke-width="8" stroke-linecap="round"/>
+
+    <!-- arms (hands near ears typical in bhramari, but kept subtle) -->
+    <path d="M-118 48 C -160 18, -192 -6, -215 -26" fill="none" stroke="#ffd7c2" stroke-width="26" stroke-linecap="round"/>
+    <path d="M118 48 C 160 18, 192 -6, 215 -26" fill="none" stroke="#ffd7c2" stroke-width="26" stroke-linecap="round"/>
+    <circle cx="-235" cy="-40" r="18" fill="#ffd7c2"/>
+    <circle cx="235" cy="-40" r="18" fill="#ffd7c2"/>
+
+    <!-- legs -->
+    <path d="M-220 200 C -130 110, -60 102, 0 122 C 60 102, 130 110, 220 200"
+          fill="none" stroke="#0f172a" stroke-opacity="0.34" stroke-width="34" stroke-linecap="round"/>
+
+    <!-- humming waves -->
+    <g opacity="0.75">
+      <path d="M-10 -95 C 60 -120, 110 -120, 170 -95" fill="none" stroke="#38bdf8" stroke-width="10" stroke-linecap="round" filter="url(#blur18)"/>
+      <path d="M-25 -70 C 50 -98, 115 -98, 195 -70" fill="none" stroke="#22c55e" stroke-width="10" stroke-linecap="round" filter="url(#blur18)"/>
+      <path d="M-35 -45 C 40 -72, 120 -72, 220 -45" fill="none" stroke="#a78bfa" stroke-width="10" stroke-linecap="round" filter="url(#blur18)"/>
+    </g>
+  </g>
+</svg>

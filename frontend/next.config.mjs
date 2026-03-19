@@ -3,8 +3,18 @@ const nextConfig = {
   /* config options here */
   images: {
     remotePatterns: [
-      { protocol: "https", hostname: "cdn.pixabay.com" },
-      { protocol: "https", hostname: "cdn.jsdelivr.net" },
+      {
+        protocol: "https",
+        hostname: "cdn.pixabay.com",
+      },
+      {
+        protocol: "https",
+        hostname: "cdn.jsdelivr.net",
+      },
+      {
+        protocol: "https",
+        hostname: "pixahive.com",
+      },
     ],
   },
   async headers() {
@@ -14,24 +24,24 @@ const nextConfig = {
         headers: [
           {
             key: "Cross-Origin-Opener-Policy",
-            value: "same-origin-allow-popups"
-          }
-        ]
-      }
-    ]
+            value: "same-origin-allow-popups",
+          },
+        ],
+      },
+    ];
   },
   async rewrites() {
     return [
       {
         source: "/api/:path*",
-        destination: process.env.NODE_ENV === "development"
-          ? "http://127.0.0.1:8000/api/:path*"
-          : "/api/",
+        destination:
+          process.env.NODE_ENV === "development"
+            ? "http://127.0.0.1:8000/api/:path*"
+            : "/api/",
       },
     ];
   },
   reactCompiler: true,
-
 };
 
 export default nextConfig;

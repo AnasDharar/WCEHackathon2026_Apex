@@ -56,6 +56,7 @@ export function useExerciseVoiceCoach(exerciseId, languageCode = "en-IN") {
   const [lastExerciseEvent, setLastExerciseEvent] = useState(null);
 
   const roomRef = useRef(null);
+  const startPromiseRef = useRef(null);
 
   const disconnectRoom = async (targetRoom = roomRef.current) => {
     if (!targetRoom) {
@@ -84,129 +85,154 @@ export function useExerciseVoiceCoach(exerciseId, languageCode = "en-IN") {
   }, [exerciseId, languageCode]);
 
   const startSession = async () => {
-    if (roomRef.current || phase === COACH_PHASES.connecting) {
+    if (startPromiseRef.current) {
+      return startPromiseRef.current;
+    }
+
+    if (roomRef.current?.state === ConnectionState.Connected) {
       return true;
     }
 
-    setError("");
-    setAgentConnected(false);
-    setPhase(COACH_PHASES.connecting);
-    setLastExerciseEvent(null);
-
-    try {
-      const identity = buildCoachIdentity(exerciseId, languageCode);
-      setSessionIdentity(identity);
-
-      const tokenResponse = await api.get("/voice/token", {
-        params: {
-          room_name: identity.roomName,
-          participant_name: identity.participantName,
-        },
-      });
-
-      const nextRoom = new Room({
-        adaptiveStream: true,
-        dynacast: true,
-      });
-
-      const handleConnectionStateChanged = (nextState) => {
-        setConnectionState(nextState);
-
-        if (nextState === ConnectionState.Connected) {
-          setPhase(COACH_PHASES.ready);
-          return;
-        }
-
-        if (nextState === ConnectionState.Disconnected) {
-          setPhase(COACH_PHASES.idle);
-          setAgentConnected(false);
-        }
-      };
-
-      const handleParticipantConnected = (participant) => {
-        if (participant.identity !== nextRoom.localParticipant.identity) {
-          setAgentConnected(true);
-        }
-      };
-
-      const handleParticipantDisconnected = (participant) => {
-        if (participant.identity !== nextRoom.localParticipant.identity) {
-          setAgentConnected(false);
-          setPhase(COACH_PHASES.ready);
-        }
-      };
-
-      const handleActiveSpeakersChanged = (speakers) => {
-        const localIdentity = nextRoom.localParticipant.identity;
-        const remoteIsSpeaking = speakers.some(
-          (speaker) => speaker.identity !== localIdentity && speaker.audioLevel > 0
-        );
-
-        if (remoteIsSpeaking) {
-          setPhase(COACH_PHASES.speaking);
-        } else if (nextRoom.state === ConnectionState.Connected) {
-          setPhase(COACH_PHASES.ready);
-        }
-      };
-
-      const handleTrackSubscribed = (_track, publication, participant) => {
-        if (
-          publication.kind === Track.Kind.Audio &&
-          participant.identity !== nextRoom.localParticipant.identity
-        ) {
-          setAgentConnected(true);
-        }
-      };
-
-      const handleDataReceived = (payload, participant, _kind, topic) => {
-        if (
-          topic !== "exercise-ui" ||
-          participant.identity === nextRoom.localParticipant.identity
-        ) {
-          return;
-        }
-
-        const decoded = decodePayload(payload);
-        if (decoded) {
-          setLastExerciseEvent({
-            ...decoded,
-            receivedAt: Date.now(),
-          });
-        }
-      };
-
-      nextRoom
-        .on(RoomEvent.ConnectionStateChanged, handleConnectionStateChanged)
-        .on(RoomEvent.ParticipantConnected, handleParticipantConnected)
-        .on(RoomEvent.ParticipantDisconnected, handleParticipantDisconnected)
-        .on(RoomEvent.ActiveSpeakersChanged, handleActiveSpeakersChanged)
-        .on(RoomEvent.TrackSubscribed, handleTrackSubscribed)
-        .on(RoomEvent.DataReceived, handleDataReceived);
-
-      roomRef.current = nextRoom;
-      setRoom(nextRoom);
-
-      await nextRoom.prepareConnection(tokenResponse.server_url, tokenResponse.token);
-      await nextRoom.connect(tokenResponse.server_url, tokenResponse.token);
-      await nextRoom.localParticipant.setMicrophoneEnabled(false);
-      await nextRoom.startAudio();
-
-      setPhase(COACH_PHASES.ready);
+    if (phase === COACH_PHASES.connecting) {
       return true;
-    } catch (caughtError) {
-      await disconnectRoom(roomRef.current);
-      roomRef.current = null;
-      setRoom(null);
-      setConnectionState(ConnectionState.Disconnected);
-      setPhase(COACH_PHASES.error);
+    }
+
+    startPromiseRef.current = (async () => {
+      setError("");
       setAgentConnected(false);
-      setError(
-        caughtError instanceof Error
-          ? caughtError.message
-          : "Unable to start the exercise voice coach.",
-      );
-      return false;
-    }
+      setPhase(COACH_PHASES.connecting);
+      setLastExerciseEvent(null);
+
+      try {
+        if (roomRef.current) {
+          await disconnectRoom(roomRef.current);
+          roomRef.current = null;
+          setRoom(null);
+          setConnectionState(ConnectionState.Disconnected);
+        }
+
+        const identity = buildCoachIdentity(exerciseId, languageCode);
+        setSessionIdentity(identity);
+
+        const tokenResponse = await api.get("/voice/token", {
+          params: {
+            room_name: identity.roomName,
+            participant_name: identity.participantName,
+          },
+        });
+
+        const nextRoom = new Room({
+          adaptiveStream: true,
+          dynacast: true,
+        });
+
+        const handleConnectionStateChanged = (nextState) => {
+          setConnectionState(nextState);
+
+          if (nextState === ConnectionState.Connected) {
+            setPhase(COACH_PHASES.ready);
+            return;
+          }
+
+          if (nextState === ConnectionState.Disconnected) {
+            if (roomRef.current === nextRoom) {
+              roomRef.current = null;
+              setRoom(null);
+            }
+            setPhase(COACH_PHASES.idle);
+            setAgentConnected(false);
+          }
+        };
+
+        const handleParticipantConnected = (participant) => {
+          if (participant.identity !== nextRoom.localParticipant.identity) {
+            setAgentConnected(true);
+          }
+        };
+
+        const handleParticipantDisconnected = (participant) => {
+          if (participant.identity !== nextRoom.localParticipant.identity) {
+            setAgentConnected(false);
+            setPhase(COACH_PHASES.ready);
+          }
+        };
+
+        const handleActiveSpeakersChanged = (speakers) => {
+          const localIdentity = nextRoom.localParticipant.identity;
+          const remoteIsSpeaking = speakers.some(
+            (speaker) => speaker.identity !== localIdentity && speaker.audioLevel > 0
+          );
+
+          if (remoteIsSpeaking) {
+            setPhase(COACH_PHASES.speaking);
+          } else if (nextRoom.state === ConnectionState.Connected) {
+            setPhase(COACH_PHASES.ready);
+          }
+        };
+
+        const handleTrackSubscribed = (_track, publication, participant) => {
+          if (
+            publication.kind === Track.Kind.Audio &&
+            participant.identity !== nextRoom.localParticipant.identity
+          ) {
+            setAgentConnected(true);
+          }
+        };
+
+        const handleDataReceived = (payload, participant, _kind, topic) => {
+          if (
+            topic !== "exercise-ui" ||
+            participant.identity === nextRoom.localParticipant.identity
+          ) {
+            return;
+          }
+
+          const decoded = decodePayload(payload);
+          if (decoded) {
+            setLastExerciseEvent({
+              ...decoded,
+              receivedAt: Date.now(),
+            });
+          }
+        };
+
+        nextRoom
+          .on(RoomEvent.ConnectionStateChanged, handleConnectionStateChanged)
+          .on(RoomEvent.ParticipantConnected, handleParticipantConnected)
+          .on(RoomEvent.ParticipantDisconnected, handleParticipantDisconnected)
+          .on(RoomEvent.ActiveSpeakersChanged, handleActiveSpeakersChanged)
+          .on(RoomEvent.TrackSubscribed, handleTrackSubscribed)
+          .on(RoomEvent.DataReceived, handleDataReceived);
+
+        roomRef.current = nextRoom;
+        setRoom(nextRoom);
+
+        await nextRoom.prepareConnection(tokenResponse.server_url, tokenResponse.token);
+        await nextRoom.connect(tokenResponse.server_url, tokenResponse.token);
+        await nextRoom.localParticipant.setMicrophoneEnabled(false);
+        await nextRoom.startAudio();
+
+        setPhase(COACH_PHASES.ready);
+        return true;
+      } catch (caughtError) {
+        await disconnectRoom(roomRef.current);
+        roomRef.current = null;
+        setRoom(null);
+        setConnectionState(ConnectionState.Disconnected);
+        setPhase(COACH_PHASES.error);
+        setAgentConnected(false);
+        setError(
+          caughtError instanceof Error
+            ? caughtError.message
+            : "Unable to start the exercise voice coach.",
+        );
+        return false;
+      } finally {
+        startPromiseRef.current = null;
+      }
+    })();
+
+    return startPromiseRef.current;
   };
 
   const publishExerciseEvent = async (payload) => {
