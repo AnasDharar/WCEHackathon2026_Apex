@@ -205,6 +205,21 @@ void main() {
 
 const MAX_GRADIENT_STOPS = 8;
 
+const hasWebGLSupport = () => {
+  if (typeof window === 'undefined' || typeof document === 'undefined') return false;
+
+  const canvas = document.createElement('canvas');
+  const contextNames = ['webgl2', 'webgl', 'experimental-webgl'];
+
+  return contextNames.some(contextName => {
+    try {
+      return !!canvas.getContext(contextName, { failIfMajorPerformanceCaveat: true });
+    } catch {
+      return false;
+    }
+  });
+};
+
 function hexToVec3(hex) {
   let value = hex.trim();
 
@@ -279,12 +294,28 @@ export default function FloatingLines({
   useEffect(() => {
     if (!containerRef.current) return;
 
+    if (!hasWebGLSupport()) {
+      containerRef.current.dataset.webgl = 'unavailable';
+      return;
+    }
+
+    containerRef.current.dataset.webgl = 'available';
+
     const scene = new Scene();
 
     const camera = new OrthographicCamera(-1, 1, 1, -1, 0, 1);
     camera.position.z = 1;
 
-    const renderer = new WebGLRenderer({ antialias: true, alpha: false });
+    let renderer;
+    try {
+      renderer = new WebGLRenderer({ antialias: true, alpha: false });
+    } catch {
+      if (containerRef.current) {
+        containerRef.current.dataset.webgl = 'unavailable';
+      }
+      return;
+    }
+
     renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
     renderer.domElement.style.width = '100%';
     renderer.domElement.style.height = '100%';

@@ -299,15 +299,6 @@ export default function Home() {
                 transition={{ duration: 0.8, delay: 1.5 }}
                 className="mt-6 flex flex-wrap items-center gap-4 text-sm font-semibold text-zinc-600 pointer-events-auto"
               >
-                <div className="flex items-center gap-1.5">
-                  <span className="text-emerald-700">🔒</span>
-                  <span>100% Confidential</span>
-                </div>
-                <span className="text-zinc-300 hidden sm:block">|</span>
-                <div className="flex items-center gap-1.5">
-                  <span className="text-emerald-700">✅</span>
-                  <span>Made by Real Devs</span>
-                </div>
               </motion.div>
             </div>
           </div>

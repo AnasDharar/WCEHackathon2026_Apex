@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState, useMemo } from "react";
-import Link from "next/link";
 import Header from "@/components/Header";
 import { api } from "@/lib/api";
 
@@ -92,15 +91,18 @@ export default function Overview() {
         <div className="grid grid-cols-1 md:grid-cols-12 gap-8 pb-20 text-gray-900">
           
           {/* Quick Actions - Irregular 7 / 5 split */}
-          <Link href="/home/voice-assistant" className="md:col-span-7 group flex items-center justify-between rounded-xl bg-emerald-700 p-6 text-white shadow-sm ring-1 ring-emerald-800/50 hover:bg-emerald-800 transition-all duration-200 ease-in-out hover:shadow-md hover:-translate-y-0.5 active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2">
+          <div className="md:col-span-7 flex items-center justify-between rounded-xl bg-emerald-700/70 p-6 text-white shadow-sm ring-1 ring-emerald-800/50 opacity-95 cursor-not-allowed">
             <div>
+              <div className="mb-2 inline-flex items-center rounded-full bg-white/20 px-3 py-1 text-[11px] font-bold uppercase tracking-wider text-white ring-1 ring-white/30">
+                Coming Soon
+              </div>
               <h3 className="text-xl font-bold tracking-tight text-white mb-1">Therapy Room</h3>
               <p className="text-emerald-100 text-sm font-medium">Talk to our AI Voice Agents</p>
             </div>
-            <div className="h-10 w-10 flex items-center justify-center opacity-80 group-hover:opacity-100 group-hover:translate-x-1 transition-all duration-200 ease-in-out">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+            <div className="h-10 w-10 flex items-center justify-center opacity-80">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M6 6l12 12M18 6L6 18"/></svg>
             </div>
-          </Link>
+          </div>
           
           <a href="#exercise-for-you" className="md:col-span-5 group flex items-center justify-between rounded-xl bg-emerald-50 p-6 text-gray-900 shadow-sm ring-1 ring-emerald-200 hover:bg-emerald-100 transition-all duration-200 ease-in-out hover:shadow-md hover:-translate-y-0.5 active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2">
             <div>

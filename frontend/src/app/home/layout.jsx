@@ -10,6 +10,35 @@ import Grainient from "@/components/bg/bg";
 
 const box_shadow = "shadow-[0_4px_20px_rgba(0,0,0,0.03)]";
 
+const HOME_BACKGROUND_CONFIG = {
+  useAnimatedBackground: false,
+  containerClassName: "bg-white",
+  grainientProps: {
+    color1: "#c5fce2",
+    color2: "#34d399",
+    color3: "#0aa179",
+    timeSpeed: 0.15,
+    colorBalance: 0,
+    warpStrength: 1,
+    warpFrequency: 5,
+    warpSpeed: 2,
+    warpAmplitude: 50,
+    blendAngle: 0,
+    blendSoftness: 0.05,
+    rotationAmount: 500,
+    noiseScale: 3,
+    grainAmount: 0.17,
+    grainScale: 2,
+    grainAnimated: false,
+    contrast: 1.1,
+    gamma: 1,
+    saturation: 1,
+    centerX: 0,
+    centerY: 0,
+    zoom: 0.9,
+  },
+};
+
 const OverviewIcon = () => (
   <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
     <rect width="7" height="9" x="3" y="3" rx="1" /><rect width="7" height="5" x="14" y="3" rx="1" /><rect width="7" height="9" x="14" y="12" rx="1" /><rect width="7" height="5" x="3" y="16" rx="1" />
@@ -77,12 +106,12 @@ const navItems = [
   { id: "overview", label: "Overview", icon: OverviewIcon, href: "/home" },
   { id: "habit-tracker", label: "Habit Tracker", icon: HabitIcon, href: "/home/habit-tracker" },
   { id: "ai-chatbot", label: "AI Assistant", icon: ChatbotIcon, href: "/home/ai-chatbot" },
-  { id: "voice-assistant", label: "Therapy Room", icon: TherapyRoomIcon, href: "/home/voice-assistant" },
+  // { id: "voice-assistant", label: "Therapy Room", icon: TherapyRoomIcon, href: "/home/voice-assistant" },
   { id: "exercises", label: "Exercises", icon: ExercisesIcon, href: "/home/exercises" },
   { id: "resources", label: "Resources", icon: ResourcesIcon, href: "/home/resources" },
-  { id: "appointments", label: "Appointments", icon: AppointmentsIcon, href: "/home/appointments" },
+  // { id: "appointments", label: "Appointments", icon: AppointmentsIcon, href: "/home/appointments" },
   { id: "events", label: "Events", icon: EventsIcon, href: "/home/events" },
-  { id: "community", label: "Community", icon: CommunityIcon, href: "/home/community" },
+  // { id: "community", label: "Community", icon: CommunityIcon, href: "/home/community" },
 ];
 
 export default function HomeLayout({ children }) {
@@ -141,33 +170,12 @@ export default function HomeLayout({ children }) {
   }
 
   return (
-    <div className="flex h-screen relative overflow-hidden bg-white/50">
-      <div className="fixed inset-0 z-0 pointer-events-none">
-        <Grainient
-          color1="#c5fce2"
-          color2="#34d399"
-          color3="#0aa179"
-          timeSpeed={0.15}
-          colorBalance={0}
-          warpStrength={1}
-          warpFrequency={5}
-          warpSpeed={2}
-          warpAmplitude={50}
-          blendAngle={0}
-          blendSoftness={0.05}
-          rotationAmount={500}
-          noiseScale={3}
-          grainAmount={0.17}
-          grainScale={2}
-          grainAnimated={false}
-          contrast={1.1}
-          gamma={1}
-          saturation={1}
-          centerX={0}
-          centerY={0}
-          zoom={0.9}
-        />
-      </div>
+    <div className={`flex h-screen relative overflow-hidden ${HOME_BACKGROUND_CONFIG.containerClassName}`}>
+      {HOME_BACKGROUND_CONFIG.useAnimatedBackground && (
+        <div className="fixed inset-0 z-0 pointer-events-none">
+          <Grainient {...HOME_BACKGROUND_CONFIG.grainientProps} />
+        </div>
+      )}
 
       <div className="flex h-full w-full z-10 relative">
         <MoodCheckInModal

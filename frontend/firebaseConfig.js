@@ -11,13 +11,13 @@ import {
 import { getFirestore } from "firebase/firestore";
 
 const firebaseConfig = {
-  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
-  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
-  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
-  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
-  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
-  measurementId: process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID,
+  apiKey: "AIzaSyCT6aEJvqP8bMWGkBQiv3eRUiHkYauFKow",
+  authDomain: "manah-aarogya.firebaseapp.com",
+  projectId: "manah-aarogya",
+  storageBucket: "manah-aarogya.firebasestorage.app",
+  messagingSenderId: "852278303030",
+  appId: "1:852278303030:web:cd528bbaa369441a5e7b97",
+  measurementId: "G-5HFJRLC6DM"
 };
 
 const app = initializeApp(firebaseConfig);
