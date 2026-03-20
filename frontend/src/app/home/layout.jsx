@@ -11,7 +11,7 @@ import Grainient from "@/components/bg/bg";
 const box_shadow = "shadow-[0_4px_20px_rgba(0,0,0,0.03)]";
 
 const HOME_BACKGROUND_CONFIG = {
-  useAnimatedBackground: false,
+  useAnimatedBackground: true,
   containerClassName: "bg-white",
   grainientProps: {
     color1: "#c5fce2",

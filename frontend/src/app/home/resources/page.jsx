@@ -38,7 +38,11 @@ export default function Resources() {
   const [error, setError] = useState("");
 
   const resourceTypes = useMemo(() => {
-    const allTypes = new Set((library || []).map((item) => item.type));
+    const allTypes = new Set(
+      (library || [])
+        .map((item) => item.type || item.resource_type)
+        .filter(Boolean)
+    );
     return ["all", ...Array.from(allTypes)];
   }, [library]);
 
@@ -90,7 +94,6 @@ export default function Resources() {
             query: query || undefined,
             type: resourceType === "all" ? undefined : resourceType,
             recommended: recommendedOnly ? true : undefined,
-            limit: 50,
           },
         });
 
@@ -243,7 +246,7 @@ export default function Resources() {
                       </div>
                       <div className="absolute bottom-4 left-4">
                          <span className="rounded-md bg-white/90 backdrop-blur-[2px] px-2.5 py-1 text-[10px] font-bold uppercase tracking-widest text-gray-900 shadow-sm">
-                          {item.type}
+                          {item.type || item.resource_type || "resource"}
                         </span>
                       </div>
                     </div>
