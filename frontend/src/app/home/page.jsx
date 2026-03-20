@@ -3,16 +3,20 @@
 import { useEffect, useState, useMemo } from "react";
 import Header from "@/components/Header";
 import { api } from "@/lib/api";
+import { getUserSession } from "@/lib/userSession";
+import { useRouter } from "next/navigation";
 
 const static_card_style = "rounded-xl bg-white p-6 shadow-sm ring-1 ring-black/5";
 
 export default function Overview() {
+  const router = useRouter();
   const [dashboard, setDashboard] = useState(null);
   const [insights, setInsights] = useState(null);
   const [moodHistory, setMoodHistory] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [exerciseStarted, setExerciseStarted] = useState(false);
+  const [isTherapist, setIsTherapist] = useState(false);
 
   async function loadDashboard() {
     setLoading(true);
@@ -34,6 +38,12 @@ export default function Overview() {
   }
 
   useEffect(() => {
+    const sessionUser = getUserSession();
+    if (sessionUser?.role === "therapist") {
+      setIsTherapist(true);
+      setLoading(false);
+      return;
+    }
     loadDashboard();
   }, []);
 
@@ -86,6 +96,22 @@ export default function Overview() {
           <div className={`h-32 md:col-span-8 ${static_card_style} bg-gray-50`} />
           <div className={`h-32 md:col-span-4 ${static_card_style} bg-gray-50`} />
           <div className={`h-40 md:col-span-12 ${static_card_style} bg-gray-50`} />
+        </div>
+      ) : isTherapist ? (
+        <div className="flex flex-col items-center justify-center p-12 text-center rounded-2xl bg-white shadow-sm ring-1 ring-black/5 pb-20 mt-10">
+           <div className="w-20 h-20 bg-emerald-100 rounded-full flex items-center justify-center mb-6 ring-4 ring-emerald-50">
+             <svg className="w-10 h-10 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
+           </div>
+           <h2 className="text-3xl font-bold tracking-tight text-gray-900 mb-4">Practitioner Interface</h2>
+           <p className="text-lg text-gray-600 max-w-lg mb-10 leading-relaxed">
+             This general wellness dashboard is designed for patients. Visit your dedicated Therapist panel to manage your schedule, accept appointments, and maintain clinical notes.
+           </p>
+           <button 
+             onClick={() => router.push('/therapist')}
+             className="rounded-xl bg-emerald-600 px-8 py-4 text-base font-bold text-white transition-all duration-200 hover:bg-emerald-700 hover:shadow-lg active:scale-95 focus:outline-none focus:ring-4 focus:ring-emerald-500/30"
+           >
+             Go to Therapist Portal
+           </button>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-12 gap-8 pb-20 text-gray-900">
@@ -196,7 +222,7 @@ export default function Overview() {
                 <ul className="space-y-3">
                   {(dashboard?.explanations || insights?.explanations || []).map((line, idx) => (
                     <li key={idx} className="text-sm text-gray-600 leading-relaxed flex gap-3">
-                      <span className="text-gray-600 flex-shrink-0">
+                      <span className="text-gray-600 shrink-0">
                         <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
                       </span>
                       <span>{line}</span>
@@ -272,7 +298,7 @@ export default function Overview() {
                   key={`${resource.id}-${resource.title}`}
                   className="group flex flex-col bg-white ring-1 ring-black/5 rounded-2xl overflow-hidden transition-all duration-300 ease-in-out hover:shadow-lg hover:ring-black/10 hover:-translate-y-1"
                 >
-                  <div className="aspect-[16/9] w-full bg-gray-100 relative overflow-hidden">
+                  <div className="aspect-video w-full bg-gray-100 relative overflow-hidden">
                     <img
                       src={resource.thumbnail_url || `https://picsum.photos/seed/${encodeURIComponent(resource.id + '-' + resource.title)}/600/350`}
                       alt={resource.title}

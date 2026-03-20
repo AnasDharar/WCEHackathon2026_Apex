@@ -37,6 +37,7 @@ function normalizeUserSession(raw) {
     email,
     name: name || firstNameFromName("", email),
     first_name: String(raw.first_name || raw.firstName || "").trim() || firstNameFromName(name, email),
+    role: String(raw.role || "user").trim(),
   };
 }
 

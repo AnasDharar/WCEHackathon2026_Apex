@@ -42,8 +42,20 @@ export default function SignIn() {
         name: user.displayName || "",
       });
 
-      let nextPath = loginRes?.has_completed_assessment ? "/home" : "/test";
-      if (nextPath === "/home") {
+      const backendRole = loginRes?.data?.user?.role || loginRes?.user?.role || "user";
+      saveUserSession({
+        id: user.uid,
+        name: user.displayName || "",
+        first_name: firstNameFromName(user.displayName || "", user.email || ""),
+        email: user.email || "",
+        role: backendRole,
+      });
+
+      let nextPath = loginRes?.data?.has_completed_assessment || loginRes?.has_completed_assessment ? "/home" : "/test";
+      
+      if (backendRole === "therapist") {
+        nextPath = "/therapist";
+      } else if (nextPath === "/home") {
         try {
           const onboardingRes = await api.get("/habits/onboarding/status");
           const onboarding = onboardingRes?.data || {};

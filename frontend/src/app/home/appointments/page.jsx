@@ -6,6 +6,7 @@ import Header from "@/components/Header";
 import { useNotification } from "@/context/NotificationContext";
 import { api } from "@/lib/api";
 import { getUserSession } from "@/lib/userSession";
+import { useRouter } from "next/navigation";
 
 const bookingModes = ["Online", "In-person", "Video Session", "Audio Session"];
 const statThemes = [
@@ -45,6 +46,10 @@ export default function Appointments() {
 
   const [languageFilter, setLanguageFilter] = useState("All");
   const [selectedCounselor, setSelectedCounselor] = useState(null);
+  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().slice(0, 10));
+  const [isTherapist, setIsTherapist] = useState(false);
+  const router = useRouter();
+
   const [bookingData, setBookingData] = useState({
     preferred_slot: "",
     mode: "Online",
@@ -100,14 +105,22 @@ export default function Appointments() {
     let mounted = true;
 
     async function loadInitial() {
+      const sessionUser = getUserSession();
+      if (sessionUser?.role === "therapist") {
+        if (mounted) {
+           setIsTherapist(true);
+           setLoading(false);
+        }
+        return;
+      }
+
       setLoading(true);
       setError("");
       try {
-        const [statsRes, counselorRes, upcomingRes, slotsRes, checklistRes] = await Promise.all([
+        const [statsRes, counselorRes, upcomingRes, checklistRes] = await Promise.all([
           api.get("/appointments/stats"),
           api.get("/appointments/counselors"),
           api.get("/appointments/upcoming"),
-          api.get("/appointments/open-slots"),
           api.get("/appointments/prep-checklist"),
         ]);
 
@@ -118,7 +131,6 @@ export default function Appointments() {
         setStats(normalizeStats(statsRes?.data || {}));
         setCounselors(normalizeCounselors(counselorRes?.data || []));
         setUpcoming(normalizeAppointments(upcomingRes?.data || []));
-        setOpenSlots(slotsRes?.data || []);
         setPrepChecklist(checklistRes?.data || []);
       } catch (err) {
         if (mounted) {
@@ -136,6 +148,25 @@ export default function Appointments() {
       mounted = false;
     };
   }, []);
+
+  useEffect(() => {
+    let mounted = true;
+    async function fetchSlots() {
+        if (!selectedCounselor || !selectedDate) {
+            if (mounted) setOpenSlots([]);
+            return;
+        }
+        try {
+            const res = await api.get(`/appointments/open-slots?therapist_id=${selectedCounselor.id}&date=${selectedDate}`);
+            if (mounted) setOpenSlots(res.data || []);
+        } catch(e) {
+            console.error("Failed to fetch slots", e);
+            if (mounted) setOpenSlots([]);
+        }
+    }
+    fetchSlots();
+    return () => mounted = false;
+  }, [selectedCounselor, selectedDate]);
 
   const languages = useMemo(() => {
     const langSet = new Set();
@@ -155,14 +186,12 @@ export default function Appointments() {
   const nextAppointment = useMemo(() => upcoming[0] || null, [upcoming]);
 
   const refreshAppointmentsData = async () => {
-    const [statsRes, upcomingRes, slotsRes] = await Promise.all([
+    const [statsRes, upcomingRes] = await Promise.all([
       api.get("/appointments/stats"),
       api.get("/appointments/upcoming"),
-      api.get("/appointments/open-slots"),
     ]);
     setStats(normalizeStats(statsRes?.data || {}));
     setUpcoming(normalizeAppointments(upcomingRes?.data || []));
-    setOpenSlots(slotsRes?.data || []);
   };
 
   const bookAppointment = async () => {
@@ -178,9 +207,13 @@ export default function Appointments() {
     setBooking(true);
     setError("");
     try {
+      const selectedSlotParams = openSlots.find(s => s.display === bookingData.preferred_slot) || openSlots[0];
       const payload = {
+        therapist_id: selectedCounselor.id,
         counselor_name: selectedCounselor.name,
-        preferred_slot: bookingData.preferred_slot,
+        preferred_slot: `${selectedDate} ${bookingData.preferred_slot}`,
+        start_time: selectedSlotParams ? selectedSlotParams.start : new Date().toISOString(),
+        end_time: selectedSlotParams ? selectedSlotParams.end : new Date().toISOString(),
         mode: bookingData.mode,
         location: bookingData.location || null,
         notes: bookingData.notes || null,
@@ -190,7 +223,7 @@ export default function Appointments() {
 
       addNotification({
         title: "Appointment Booked",
-        message: `Session with ${appointment?.doctor || selectedCounselor.name} scheduled for ${appointment?.date} at ${appointment?.time}.`,
+        message: `Session with ${appointment?.doctor || selectedCounselor.name} scheduled.`,
       });
 
       setSelectedCounselor(null);
@@ -255,9 +288,25 @@ export default function Appointments() {
             />
           ))}
         </div>
+      ) : isTherapist ? (
+        <div className="flex flex-col items-center justify-center p-12 text-center rounded-2xl bg-white shadow-sm ring-1 ring-black/5 pb-20 mt-10">
+           <div className="w-20 h-20 bg-emerald-100 rounded-full flex items-center justify-center mb-6 ring-4 ring-emerald-50">
+             <svg className="w-10 h-10 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
+           </div>
+           <h2 className="text-3xl font-bold tracking-tight text-gray-900 mb-4">Therapist Portal</h2>
+           <p className="text-lg text-gray-600 max-w-lg mb-10 leading-relaxed">
+             This booking page is designed for patients. Visit your dedicated Therapist Dashboard to view and manage your scheduled appointments.
+           </p>
+           <button 
+             onClick={() => router.push('/therapist')}
+             className="rounded-xl bg-emerald-600 px-8 py-4 text-base font-bold text-white transition-all duration-200 hover:bg-emerald-700 hover:shadow-lg active:scale-95 focus:outline-none focus:ring-4 focus:ring-emerald-500/30"
+           >
+             Go to Therapist Dashboard
+           </button>
+        </div>
       ) : (
         <div className="space-y-8 pb-20">
-          <section className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-emerald-50 via-white to-cyan-50 p-8 shadow-sm ring-1 ring-black/5">
+          <section className="relative overflow-hidden rounded-2xl bg-linear-to-r from-emerald-50 via-white to-cyan-50 p-8 shadow-sm ring-1 ring-black/5">
             <div className="pointer-events-none absolute -right-20 -top-20 h-56 w-56 rounded-full bg-emerald-200/40 blur-3xl" />
             <div className="pointer-events-none absolute -left-20 -bottom-20 h-56 w-56 rounded-full bg-cyan-200/30 blur-3xl" />
 
@@ -307,7 +356,7 @@ export default function Appointments() {
             {stats.map((item, idx) => (
               <div
                 key={item.id}
-                className={`rounded-2xl bg-gradient-to-br p-[1px] shadow-sm ${
+                className={`rounded-2xl bg-linear-to-br p-px shadow-sm ${
                   statThemes[idx % statThemes.length]
                 }`}
               >
@@ -407,7 +456,7 @@ export default function Appointments() {
                             <p className="mt-2 text-xs font-semibold text-gray-500 truncate">For: {item.patient_name}</p>
                           )}
                         </div>
-                        <span className="flex-shrink-0 rounded-full bg-blue-50 ring-1 ring-blue-200 px-3 py-1 text-xs font-bold uppercase tracking-wider text-gray-800">
+                        <span className="shrink-0 rounded-full bg-blue-50 ring-1 ring-blue-200 px-3 py-1 text-xs font-bold uppercase tracking-wider text-gray-800">
                           {item.status}
                         </span>
                       </div>
@@ -481,6 +530,14 @@ export default function Appointments() {
                       <p className="text-sm font-medium text-gray-900">{selectedCounselor.specialty}</p>
                     </div>
 
+                    <label className="block text-sm font-bold text-gray-700 mb-2">Preferred Date</label>
+                    <input 
+                      type="date"
+                      value={selectedDate}
+                      onChange={(e) => setSelectedDate(e.target.value)}
+                      className="mb-5 w-full rounded-xl ring-1 ring-gray-200 bg-gray-50 p-3.5 text-sm font-medium text-gray-900 outline-none focus:bg-white focus:ring-2 focus:ring-emerald-500"
+                    />
+
                     <label className="block text-sm font-bold text-gray-700 mb-2">Preferred Slot</label>
                     <select
                       value={bookingData.preferred_slot}
@@ -491,8 +548,8 @@ export default function Appointments() {
                     >
                       <option value="">Choose an available slot...</option>
                       {openSlots.map((slot) => (
-                        <option key={slot} value={slot}>
-                          {slot}
+                        <option key={slot.display} value={slot.display}>
+                          {slot.display}
                         </option>
                       ))}
                     </select>
@@ -569,16 +626,16 @@ export default function Appointments() {
                   <div className="flex flex-wrap gap-2">
                     {openSlots.map((slot) => (
                       <button
-                        key={slot}
+                        key={slot.display}
                         type="button"
-                        onClick={() => setBookingData((prev) => ({ ...prev, preferred_slot: slot }))}
+                        onClick={() => setBookingData((prev) => ({ ...prev, preferred_slot: slot.display }))}
                         className={`rounded-lg ring-1 px-4 py-2 text-sm font-bold transition-all duration-200 active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 ${
-                          bookingData.preferred_slot === slot
+                          bookingData.preferred_slot === slot.display
                             ? "ring-emerald-500 bg-emerald-600 text-white shadow-md transform -translate-y-0.5"
                             : "ring-gray-200 bg-white text-gray-700 hover:bg-gray-50 hover:ring-gray-300 hover:shadow-sm"
                         }`}
                       >
-                        {slot}
+                        {slot.display}
                       </button>
                     ))}
                   </div>
