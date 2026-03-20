@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { api } from "@/lib/api";
-import { getUserSession, setUserSession } from "@/lib/userSession";
+import { getUserSession, saveUserSession } from "@/lib/userSession";
 import { User, Building, BookOpen } from "lucide-react";
 
 export default function ProfilePage() {
@@ -42,7 +42,7 @@ export default function ProfilePage() {
       const updatedUser = await api.patch(`/profile/me`, formData);
       setUser(updatedUser.data);
       // Update local storage session
-      setUserSession({ ...sessionUser, name: formData.name, organization: formData.organization });
+      saveUserSession({ ...sessionUser, name: formData.name, organization: formData.organization });
       setMessage("Profile updated successfully!");
     } catch (error) {
       setMessage("Failed to update profile.");
