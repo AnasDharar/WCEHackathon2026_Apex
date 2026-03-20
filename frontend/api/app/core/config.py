@@ -1,3 +1,4 @@
+import os
 from functools import lru_cache
 from pathlib import Path
 
@@ -16,7 +17,9 @@ class Settings(BaseSettings):
     api_prefix: str = "/api/v1"
     cors_origins: list[str] = Field(default_factory=lambda: ["*"])
     database_url: str = ""
-    sqlite_file: str = "backend.db"
+    sqlite_file: str = Field(
+        default_factory=lambda: "/tmp/backend.db" if os.getenv("VERCEL") else "backend.db"
+    )
     cerebras_api_key: str = ""
     cerebras_base_url: str = "https://api.cerebras.ai/v1"
     cerebras_model: str = "qwen-3-235b-a22b-instruct-2507"
