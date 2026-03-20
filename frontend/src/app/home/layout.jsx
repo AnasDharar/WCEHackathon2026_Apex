@@ -106,12 +106,12 @@ const navItems = [
   { id: "overview", label: "Overview", icon: OverviewIcon, href: "/home" },
   { id: "habit-tracker", label: "Habit Tracker", icon: HabitIcon, href: "/home/habit-tracker" },
   { id: "ai-chatbot", label: "AI Assistant", icon: ChatbotIcon, href: "/home/ai-chatbot" },
-  // { id: "voice-assistant", label: "Therapy Room", icon: TherapyRoomIcon, href: "/home/voice-assistant" },
+  { id: "voice-assistant", label: "Therapy Room", icon: TherapyRoomIcon, href: "/home/voice-assistant" },
   { id: "exercises", label: "Exercises", icon: ExercisesIcon, href: "/home/exercises" },
   { id: "resources", label: "Resources", icon: ResourcesIcon, href: "/home/resources" },
-  // { id: "appointments", label: "Appointments", icon: AppointmentsIcon, href: "/home/appointments" },
+  { id: "appointments", label: "Appointments", icon: AppointmentsIcon, href: "/home/appointments" },
   { id: "events", label: "Events", icon: EventsIcon, href: "/home/events" },
-  // { id: "community", label: "Community", icon: CommunityIcon, href: "/home/community" },
+  { id: "community", label: "Community", icon: CommunityIcon, href: "/home/community" },
 ];
 
 export default function HomeLayout({ children }) {
