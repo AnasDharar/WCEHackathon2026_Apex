@@ -30,32 +30,32 @@ function HabitTrackerContent() {
   const [month, setMonth] = useState(now.getMonth() + 1);
   const [activeExercise, setActiveExercise] = useState(null);
 
-  const interactive_exercises = [
-    {
-      id: "breathing-478",
-      title: "4-7-8 Breathing",
-      type: "breathing",
-      duration: "1 min",
-      description: "Quickly lower anxiety with guided rhythmic breathing.",
-      color: "bg-emerald-50 text-gray-900 ring-emerald-200 hover:bg-emerald-100"
-    },
-    {
-      id: "grounding-54321",
-      title: "5-4-3-2-1 Grounding",
-      type: "grounding",
-      duration: "2 mins",
-      description: "Reconnect with surroundings to break panic loops.",
-      color: "bg-blue-50 text-gray-900 ring-blue-200 hover:bg-blue-100"
-    },
-    {
-      id: "mood-checkin",
-      title: "Daily Reflection",
-      type: "reflection",
-      duration: "1 min",
-      description: "Log how you are feeling to improve Zenith's insights.",
-      color: "bg-purple-50 text-gray-900 ring-purple-200 hover:bg-purple-100"
-    }
-  ];
+  // const interactive_exercises = [
+  //   {
+  //     id: "breathing-478",
+  //     title: "4-7-8 Breathing",
+  //     type: "breathing",
+  //     duration: "1 min",
+  //     description: "Quickly lower anxiety with guided rhythmic breathing.",
+  //     color: "bg-emerald-50 text-gray-900 ring-emerald-200 hover:bg-emerald-100"
+  //   },
+  //   {
+  //     id: "grounding-54321",
+  //     title: "5-4-3-2-1 Grounding",
+  //     type: "grounding",
+  //     duration: "2 mins",
+  //     description: "Reconnect with surroundings to break panic loops.",
+  //     color: "bg-blue-50 text-gray-900 ring-blue-200 hover:bg-blue-100"
+  //   },
+  //   {
+  //     id: "mood-checkin",
+  //     title: "Daily Reflection",
+  //     type: "reflection",
+  //     duration: "1 min",
+  //     description: "Log how you are feeling to improve Zenith's insights.",
+  //     color: "bg-purple-50 text-gray-900 ring-purple-200 hover:bg-purple-100"
+  //   }
+  // ];
 
   const [stats, setStats] = useState([]);
   const [todayHabits, setTodayHabits] = useState([]);
@@ -404,7 +404,7 @@ function HabitTrackerContent() {
             ))}
           </div>
 
-          {!activeExercise ? (
+          {/* {!activeExercise ? (
             <div className="mb-8">
               <h2 className="text-xl font-bold tracking-tight text-gray-900 mb-5">Interactive Exercises</h2>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-8">
@@ -474,7 +474,7 @@ function HabitTrackerContent() {
                 </div>
               )}
             </div>
-          )}
+          )} */}
 
           <div className="grid grid-cols-1 gap-8 lg:grid-cols-5">
             <div className={`${static_card_style} lg:col-span-2 flex flex-col`}>
