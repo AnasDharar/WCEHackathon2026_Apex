@@ -1,3 +1,5 @@
+from importlib import import_module
+
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
@@ -8,21 +10,10 @@ from app.database import models  # noqa: F401
 from app.database.db import create_db_and_tables
 from app.repositories.event_repository import EventRepository
 from app.repositories.resource_repository import ResourceRepository
-from app.routers.appointment_router import router as appointment_router
-from app.routers.assessment_router import router as assessment_router
-from app.routers.auth_router import router as auth_router
-from app.routers.chat_router import router as chat_router
-from app.routers.community_router import router as community_router
-from app.routers.dashboard_router import router as dashboard_router
-from app.routers.event_router import router as event_router
-from app.routers.habit_router import router as habit_router
-from app.routers.insights_router import router as insights_router
-from app.routers.mood_router import router as mood_router
-from app.routers.profile_router import router as profile_router
-from app.routers.resource_router import router as resource_router
-from app.routers.voice_router import router as voice_router
 
 configure_logging()
+
+startup_error: str | None = None
 
 app = FastAPI(
     title=settings.app_name,
@@ -58,38 +49,65 @@ async def global_exception_handler(_request: Request, exc: Exception):
 @app.on_event("startup")
 def startup() -> None:
     """Create tables and seed startup data."""
-    create_db_and_tables()
-    from sqlmodel import Session
+    global startup_error
+    startup_error = None
+    try:
+        create_db_and_tables()
+        from sqlmodel import Session
 
-    from app.database.db import engine
+        from app.database.db import engine
 
-    with Session(engine) as session:
-        ResourceRepository(session).ensure_seed_data()
-        EventRepository(session).ensure_seed_data()
+        with Session(engine) as session:
+            ResourceRepository(session).ensure_seed_data()
+            EventRepository(session).ensure_seed_data()
+    except Exception as exc:
+        startup_error = str(exc)
+        logger.exception("Startup initialization failed: {}", startup_error)
 
 
 @app.get("/")
+@app.get("/api")
 def root() -> dict[str, str]:
     """Return service status."""
     return {"status": "ok", "service": settings.app_name, "version": settings.app_version}
 
 
 @app.get("/health")
-def health() -> dict[str, str]:
+@app.get("/api/health")
+def health() -> dict[str, str | None]:
     """Return health check status."""
-    return {"status": "healthy"}
+    if startup_error:
+        return {"status": "degraded", "startup_error": startup_error}
+    return {"status": "healthy", "startup_error": None}
 
 
-app.include_router(auth_router, prefix=settings.api_prefix)
-app.include_router(habit_router, prefix=settings.api_prefix)
-app.include_router(mood_router, prefix=settings.api_prefix)
-app.include_router(profile_router, prefix=settings.api_prefix)
-app.include_router(assessment_router, prefix=settings.api_prefix)
-app.include_router(chat_router, prefix=settings.api_prefix)
-app.include_router(resource_router, prefix=settings.api_prefix)
-app.include_router(appointment_router, prefix=settings.api_prefix)
-app.include_router(event_router, prefix=settings.api_prefix)
-app.include_router(community_router, prefix=settings.api_prefix)
-app.include_router(dashboard_router, prefix=settings.api_prefix)
-app.include_router(insights_router, prefix=settings.api_prefix)
-app.include_router(voice_router, prefix=settings.api_prefix)
+def include_router_safe(module_path: str) -> None:
+    """Import and register router without crashing app startup."""
+    try:
+        module = import_module(module_path)
+        router = getattr(module, "router", None)
+        if router is None:
+            raise RuntimeError("router symbol not found")
+        app.include_router(router, prefix=settings.api_prefix)
+    except Exception as exc:
+        logger.exception("Skipping router {} due to import/register error: {}", module_path, str(exc))
+
+
+ROUTER_MODULES = [
+    "app.routers.auth_router",
+    "app.routers.habit_router",
+    "app.routers.mood_router",
+    "app.routers.profile_router",
+    "app.routers.assessment_router",
+    "app.routers.chat_router",
+    "app.routers.resource_router",
+    "app.routers.appointment_router",
+    "app.routers.event_router",
+    "app.routers.community_router",
+    "app.routers.dashboard_router",
+    "app.routers.insights_router",
+    "app.routers.voice_router",
+]
+
+for module_name in ROUTER_MODULES:
+    include_router_safe(module_name)
