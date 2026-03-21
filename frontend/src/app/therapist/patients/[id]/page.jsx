@@ -23,8 +23,8 @@ export default function PatientDossierPage() {
           api.get(`/therapist/patients/${id}`),
           api.get(`/therapist/patients/${id}/insights`),
         ]);
-        setPatientData(detailsRes.data?.data);
-        setInsights(insightsRes.data?.data);
+        setPatientData(detailsRes?.data || null);
+        setInsights(insightsRes?.data || null);
       } catch (err) {
         console.error(err);
       } finally {
@@ -44,7 +44,7 @@ export default function PatientDossierPage() {
     <div className="p-8 text-center text-gray-500 font-medium">Patient not found or access denied.</div>
   );
 
-  const { profile, appointments } = patientData;
+  const { profile, appointments, assessment_history: assessmentHistory = [] } = patientData;
 
   return (
     <div className="pb-20 space-y-8">
@@ -117,7 +117,7 @@ export default function PatientDossierPage() {
             </div>
 
             <div className={static_card_style}>
-               <h3 className="text-base font-bold text-gray-900 mb-5 flex items-center gap-2">
+              <h3 className="text-base font-bold text-gray-900 mb-5 flex items-center gap-2">
                 <AlertTriangle className="w-5 h-5 text-amber-500"/> Suggested Topics for Next Session
               </h3>
               <div className="flex flex-wrap gap-2.5">
@@ -130,6 +130,21 @@ export default function PatientDossierPage() {
             </div>
           </div>
 
+          {Array.isArray(insights?.clinician_flags) && insights.clinician_flags.length > 0 && (
+            <div className={static_card_style}>
+              <h3 className="text-base font-bold text-gray-900 mb-5 flex items-center gap-2">
+                <AlertTriangle className="w-5 h-5 text-red-500"/> Clinician Flags
+              </h3>
+              <div className="space-y-3">
+                {insights.clinician_flags.map((flag, index) => (
+                  <div key={`${flag}-${index}`} className="rounded-xl bg-red-50 px-4 py-3 ring-1 ring-red-100 text-sm font-medium text-red-900">
+                    {flag}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
         </div>
       )}
 
@@ -141,6 +156,39 @@ export default function PatientDossierPage() {
           </div>
           
           <div className="divide-y divide-gray-100">
+            {assessmentHistory.length > 0 && (
+              <div className="p-6 bg-gray-50/60">
+                <h3 className="text-sm font-bold text-gray-900 mb-4 uppercase tracking-wider">Assessment History</h3>
+                <div className="space-y-3">
+                  {assessmentHistory.map((attempt) => (
+                    <div key={attempt.id} className="rounded-xl bg-white p-4 ring-1 ring-gray-100">
+                      <div className="flex items-center justify-between gap-3">
+                        <p className="text-sm font-bold text-gray-900">
+                          {attempt.mode === "initial" ? "Initial Assessment" : "Retake Assessment"}
+                        </p>
+                        <span className="bg-emerald-50 text-emerald-800 ring-1 ring-emerald-200 px-2.5 py-1 rounded text-[10px] font-bold uppercase tracking-wider">
+                          {attempt.feedback?.risk_level || attempt.risk_level || "low"}
+                        </span>
+                      </div>
+                      <p className="mt-2 text-xs uppercase tracking-wider text-gray-400">
+                        {new Date(attempt.completed_at || attempt.created_at).toLocaleString()}
+                      </p>
+                      <div className="mt-3 flex flex-wrap gap-2">
+                        {(attempt.scores || []).map((score) => (
+                          <span
+                            key={`${attempt.id}-${score.test_id}`}
+                            className="px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-xs font-semibold"
+                          >
+                            {score.title || score.test_id}: {score.score}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
             {appointments.length > 0 ? [...appointments].sort((a,b) => new Date(b.created_at) - new Date(a.created_at)).map(appt => (
               <div key={appt.id} className="p-6 hover:bg-gray-50/30 transition-colors">
                  <div className="flex items-center justify-between mb-4">

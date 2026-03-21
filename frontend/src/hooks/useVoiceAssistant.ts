@@ -17,6 +17,8 @@ const PHASES = {
   error: "error",
 };
 
+const EMOTION_CONTEXT_TOPIC = "emotion-context";
+
 function buildRoomName(doctorId, languageCode) {
   const suffix =
     typeof crypto !== "undefined" && typeof crypto.randomUUID === "function"
@@ -57,6 +59,10 @@ function upsertTranscript(previous, nextEntry) {
     final: updated[existingIndex].final || nextEntry.final,
   };
   return updated.sort((a, b) => a.timestamp - b.timestamp);
+}
+
+function encodeRoomEvent(payload) {
+  return new TextEncoder().encode(JSON.stringify(payload));
 }
 
 export function useVoiceAssistant(selectedDoctorId, selectedLanguageCode) {
@@ -102,12 +108,12 @@ export function useVoiceAssistant(selectedDoctorId, selectedLanguageCode) {
   }, [isMuted]);
 
   useEffect(() => {
-    if (roomRef.current) {
+    if (roomRef.current && roomRef.current.state !== ConnectionState.Disconnected) {
       return;
     }
 
     setSessionIdentity(buildSessionIdentity(selectedDoctorId, selectedLanguageCode));
-  }, [selectedDoctorId, selectedLanguageCode]);
+  }, [connectionState, selectedDoctorId, selectedLanguageCode]);
 
   const startSession = async () => {
     if (roomRef.current || phase === PHASES.connecting) {
@@ -306,6 +312,31 @@ export function useVoiceAssistant(selectedDoctorId, selectedLanguageCode) {
     remoteWasSpeakingRef.current = false;
   };
 
+  const publishEmotionContext = async (payload) => {
+    const activeRoom = roomRef.current;
+
+    if (!activeRoom || activeRoom.state !== ConnectionState.Connected) {
+      return false;
+    }
+
+    try {
+      await activeRoom.localParticipant.publishData(
+        encodeRoomEvent({
+          ...payload,
+          source: "emotion-camera",
+          sentAt: Date.now(),
+        }),
+        {
+          reliable: true,
+          topic: EMOTION_CONTEXT_TOPIC,
+        },
+      );
+      return true;
+    } catch {
+      return false;
+    }
+  };
+
   const statusText = useMemo(() => {
     switch (phase) {
       case PHASES.connecting:
@@ -342,6 +373,7 @@ export function useVoiceAssistant(selectedDoctorId, selectedLanguageCode) {
     tokenDetails,
     startSession,
     toggleMute,
+    publishEmotionContext,
     endSession,
   };
 }

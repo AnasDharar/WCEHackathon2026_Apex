@@ -59,7 +59,7 @@ const client = axios.create({
 });
 
 async function request(method, path, options = {}) {
-  const { params, body, headers = {} } = options;
+  const { params, body, headers = {}, signal } = options;
   const token = options.token || (await getFirebaseToken());
 
   const finalHeaders = {
@@ -77,6 +77,7 @@ async function request(method, path, options = {}) {
       params,
       data: body,
       headers: finalHeaders,
+      signal,
     });
     return res.data;
   } catch (err) {

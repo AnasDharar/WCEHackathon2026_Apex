@@ -28,7 +28,7 @@ export default function UsersAdminPage() {
   const loadUserSummary = async (userId) => {
     try {
       const data = await api.get(`/admin/users/${userId}/summary`);
-      setSummary(data.assessments);
+      setSummary(Array.isArray(data.assessments) ? data.assessments : []);
     } catch (error) {
       console.error(error);
     }
@@ -121,20 +121,44 @@ export default function UsersAdminPage() {
               {summary && summary.length === 0 && (
                 <p className="text-gray-500 text-sm">No assessments taken.</p>
               )}
-              {summary?.map((res, i) => (
-                <div key={i} className="p-4 bg-gray-50 rounded-xl border border-gray-100">
-                  <div className="flex justify-between items-start mb-2">
-                    <span className="font-bold text-gray-800 uppercase text-sm tracking-wider">
-                      {res.test_id}
-                    </span>
-                    <span className="bg-emerald-100 text-emerald-800 px-2 py-1 rounded-full text-xs font-bold">
-                      Score: {res.score}
-                    </span>
+              {summary?.map((res, i) => {
+                const scores = Array.isArray(res.scores) ? res.scores : [];
+                const riskLevel = res.feedback?.risk_level || res.risk_level || "low";
+                const summaryText =
+                  res.feedback?.ui_summary ||
+                  res.feedback?.overall_summary ||
+                  res.summary ||
+                  "No structured summary available.";
+
+                return (
+                  <div key={res.id || i} className="p-4 bg-gray-50 rounded-xl border border-gray-100">
+                    <div className="flex justify-between items-start mb-2 gap-3">
+                      <div>
+                        <span className="font-bold text-gray-800 uppercase text-sm tracking-wider">
+                          {res.mode === "initial" ? "Initial Assessment" : "Retake Assessment"}
+                        </span>
+                        <p className="mt-1 text-[11px] uppercase tracking-wider text-gray-400">
+                          {new Date(res.completed_at || res.created_at).toLocaleString()}
+                        </p>
+                      </div>
+                      <span className="bg-emerald-100 text-emerald-800 px-2 py-1 rounded-full text-xs font-bold uppercase">
+                        {riskLevel} risk
+                      </span>
+                    </div>
+                    <div className="flex flex-wrap gap-2 mb-3">
+                      {scores.map((score) => (
+                        <span
+                          key={`${res.id}-${score.test_id}`}
+                          className="bg-white text-gray-700 px-2.5 py-1 rounded-full text-xs font-semibold ring-1 ring-gray-200"
+                        >
+                          {score.title || score.test_id}: {score.score}
+                        </span>
+                      ))}
+                    </div>
+                    <p className="text-xs text-gray-500">{summaryText}</p>
                   </div>
-                  <p className="text-sm font-medium text-gray-700 capitalize mb-1">Severity: {res.severity}</p>
-                  <p className="text-xs text-gray-500">{res.summary}</p>
-                </div>
-              ))}
+                );
+              })}
             </div>
             <button
               onClick={() => {

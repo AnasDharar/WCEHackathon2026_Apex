@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useMemo } from "react";
 import Header from "@/components/Header";
+import AssessmentModal from "@/components/assessment/AssessmentModal";
 import { api } from "@/lib/api";
 import { getUserSession } from "@/lib/userSession";
 import { useRouter } from "next/navigation";
@@ -13,23 +14,30 @@ export default function Overview() {
   const [dashboard, setDashboard] = useState(null);
   const [insights, setInsights] = useState(null);
   const [moodHistory, setMoodHistory] = useState([]);
+  const [latestAssessment, setLatestAssessment] = useState(null);
+  const [assessmentHistory, setAssessmentHistory] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [exerciseStarted, setExerciseStarted] = useState(false);
   const [isTherapist, setIsTherapist] = useState(false);
+  const [assessmentModalOpen, setAssessmentModalOpen] = useState(false);
 
   async function loadDashboard() {
     setLoading(true);
     setError("");
     try {
-      const [dashRes, insightsRes, historyRes] = await Promise.all([
+      const [dashRes, insightsRes, historyRes, latestAssessmentRes, assessmentHistoryRes] = await Promise.all([
         api.get("/dashboard"),
         api.get("/insights/daily"),
         api.get("/mood/history?days=7"),
+        api.get("/assessments/latest"),
+        api.get("/assessments/history?limit=4"),
       ]);
       setDashboard(dashRes?.data || null);
       setInsights(insightsRes?.data || null);
       setMoodHistory(Array.isArray(historyRes?.data) ? historyRes.data : []);
+      setLatestAssessment(latestAssessmentRes?.data || null);
+      setAssessmentHistory(Array.isArray(assessmentHistoryRes?.data) ? assessmentHistoryRes.data : []);
     } catch (err) {
       setError(err.message || "Failed to load dashboard");
     } finally {
@@ -59,6 +67,10 @@ export default function Overview() {
     return filledHistory;
   }, [moodHistory]);
 
+  const latestScoreCards = useMemo(() => {
+    return Array.isArray(latestAssessment?.scores) ? latestAssessment.scores : [];
+  }, [latestAssessment]);
+
   const summaryText = useMemo(() => {
     if (!insights?.summary) return "We’re tracking your mood and habits to personalize support.";
     if (insights.summary.startsWith("Today’s snapshot:")) {
@@ -71,6 +83,8 @@ export default function Overview() {
     const lTitle = title.toLowerCase();
     if (lTitle.includes("mood")) {
       window.dispatchEvent(new Event("openMoodModal"));
+    } else if (lTitle.includes("assessment") || lTitle.includes("retake")) {
+      setAssessmentModalOpen(true);
     } else if (lTitle.includes("exercise")) {
       document.getElementById("exercise-for-you")?.scrollIntoView({ behavior: "smooth" });
     } else {
@@ -80,6 +94,14 @@ export default function Overview() {
 
   return (
     <>
+      <AssessmentModal
+        open={assessmentModalOpen}
+        onClose={() => setAssessmentModalOpen(false)}
+        onCompleted={() => {
+          void loadDashboard();
+        }}
+      />
+
       <Header
         title="Dashboard"
         subtitle="Understand what’s happening, why, and what to do next."
@@ -139,6 +161,103 @@ export default function Overview() {
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M8 4h8"/><path d="M9 2v4"/><path d="M15 2v4"/><path d="M12 10v10"/><path d="M8 14h8"/><path d="M6 22h12"/></svg>
             </div>
           </a>
+
+          <div className={`md:col-span-12 ${static_card_style}`}>
+            <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
+              <div className="max-w-3xl">
+                <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-gray-500">Assessment Overview</p>
+                <h2 className="text-2xl font-bold tracking-tight text-gray-900">
+                  {latestAssessment?.feedback?.ui_summary || "Retake your test whenever you want a fresh dashboard readout."}
+                </h2>
+                <p className="mt-3 text-sm leading-relaxed text-gray-600">
+                  {latestAssessment?.feedback?.overall_summary ||
+                    "Each retake generates updated scores and structured AI feedback using your recent platform activity."}
+                </p>
+                <div className="mt-4 flex flex-wrap gap-3">
+                  <span className="rounded-full bg-gray-100 px-3 py-1.5 text-xs font-semibold uppercase tracking-wider text-gray-600">
+                    Latest risk: {latestAssessment?.feedback?.risk_level || dashboard?.user_state?.risk_level || "low"}
+                  </span>
+                  <span className="rounded-full bg-gray-100 px-3 py-1.5 text-xs font-semibold uppercase tracking-wider text-gray-600">
+                    Attempts: {assessmentHistory.length}
+                  </span>
+                  {latestAssessment?.completed_at && (
+                    <span className="rounded-full bg-gray-100 px-3 py-1.5 text-xs font-semibold uppercase tracking-wider text-gray-600">
+                      Last completed: {new Date(latestAssessment.completed_at).toLocaleDateString()}
+                    </span>
+                  )}
+                </div>
+              </div>
+
+              <button
+                onClick={() => setAssessmentModalOpen(true)}
+                className="shrink-0 rounded-xl bg-gray-900 px-5 py-3 text-sm font-bold text-white transition-colors hover:bg-gray-800"
+              >
+                Retake Test
+              </button>
+            </div>
+
+            <div className="mt-6 grid gap-4 lg:grid-cols-[1.25fr_0.75fr]">
+              <div className="grid gap-4 md:grid-cols-2">
+                {latestScoreCards.length > 0 ? latestScoreCards.map((score) => (
+                  <article key={score.test_id} className="rounded-2xl border border-gray-200 bg-gray-50 p-5">
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        <p className="text-xs font-semibold uppercase tracking-wider text-gray-400">
+                          {score.title || score.test_id}
+                        </p>
+                        <p className="mt-2 text-3xl font-bold tracking-tight text-gray-900">{score.score}</p>
+                      </div>
+                      <span className="rounded-full bg-white px-3 py-1 text-[11px] font-bold uppercase tracking-wider text-gray-600 ring-1 ring-gray-200">
+                        {score.severity}
+                      </span>
+                    </div>
+                    <p className="mt-3 text-sm leading-relaxed text-gray-600">{score.summary}</p>
+                  </article>
+                )) : (
+                  <div className="md:col-span-2 rounded-2xl border-2 border-dashed border-gray-200 bg-gray-50 p-6">
+                    <h3 className="text-base font-bold text-gray-900">No completed assessment yet</h3>
+                    <p className="mt-2 text-sm text-gray-500">
+                      Start a test to generate your first score summary and AI feedback.
+                    </p>
+                  </div>
+                )}
+              </div>
+
+              <div className="rounded-2xl border border-gray-200 bg-gray-50 p-5">
+                <p className="text-xs font-semibold uppercase tracking-wider text-gray-400">Recent Attempts</p>
+                <div className="mt-4 space-y-3">
+                  {assessmentHistory.length === 0 && (
+                    <p className="text-sm text-gray-500">Your assessment history will appear here.</p>
+                  )}
+                  {assessmentHistory.map((attempt) => (
+                    <div key={attempt.id} className="rounded-xl bg-white px-4 py-3 ring-1 ring-gray-200">
+                      <div className="flex items-center justify-between gap-3">
+                        <p className="text-sm font-bold text-gray-900">
+                          {attempt.mode === "initial" ? "Initial Assessment" : "Retake Assessment"}
+                        </p>
+                        <span className="rounded-full bg-gray-100 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wider text-gray-600">
+                          {attempt.feedback?.risk_level || attempt.risk_level || "low"}
+                        </span>
+                      </div>
+                      <p className="mt-2 text-xs font-medium uppercase tracking-wider text-gray-400">
+                        {new Date(attempt.completed_at || attempt.created_at).toLocaleString()}
+                      </p>
+                      <div className="mt-3 flex flex-wrap gap-2">
+                        {(attempt.scores || []).map((score) => (
+                          <span
+                            key={`${attempt.id}-${score.test_id}`}
+                            className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-800 ring-1 ring-emerald-100"
+                          >
+                            {score.title || score.test_id}: {score.score}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
 
           {/* Stats & Story - Irregular 4 / 8 split */}
           <div className="md:col-span-4 flex flex-col gap-8">

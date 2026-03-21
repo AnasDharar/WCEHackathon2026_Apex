@@ -94,20 +94,20 @@ export default function VoiceOrb({ phase, statusText, doctorImage, doctorName })
   const isAlive = phase === "listening" || phase === "processing" || phase === "speaking";
 
   return (
-    <div className="relative flex flex-col items-center gap-6">
+    <div className="relative flex w-full max-w-[13rem] flex-col items-center gap-2.5 sm:max-w-[14rem] sm:gap-3">
       <div
-        className={`relative flex h-56 w-56 items-center justify-center overflow-hidden rounded-[2.75rem] border shadow-[0_30px_90px_rgba(15,23,42,0.18)] transition-all duration-500 ${currentStyle.shell}`}
+        className={`relative flex h-36 w-36 items-center justify-center overflow-hidden rounded-[2rem] border shadow-[0_22px_50px_rgba(15,23,42,0.14)] transition-all duration-500 sm:h-44 sm:w-44 sm:rounded-[2.25rem] ${currentStyle.shell}`}
       >
         <div
-          className="absolute inset-10 rounded-full blur-3xl transition-all duration-500"
+          className="absolute inset-7 rounded-full blur-3xl transition-all duration-500"
           style={{ backgroundColor: currentStyle.glow, ...pulseStyle(phase) }}
         />
 
-        <div className="absolute inset-5 rounded-full border border-white/40" />
-        <div className="absolute inset-10 rounded-full border border-white/25" />
+        <div className="absolute inset-4 rounded-full border border-white/40" />
+        <div className="absolute inset-7 rounded-full border border-white/25" />
 
         <div
-          className="absolute inset-4 rounded-full"
+          className="absolute inset-3 rounded-full"
           style={{
             ...orbitStyle(phase === "speaking" ? "4s" : "7s"),
             border: `1px solid ${currentStyle.ring}`,
@@ -118,7 +118,7 @@ export default function VoiceOrb({ phase, statusText, doctorImage, doctorName })
         </div>
 
         <div
-          className="absolute inset-8 rounded-full"
+          className="absolute inset-5 rounded-full"
           style={{
             ...orbitStyle(phase === "processing" ? "5s" : "9s", "-1.2s", true),
             border: `1px solid ${currentStyle.ring}`,
@@ -129,13 +129,13 @@ export default function VoiceOrb({ phase, statusText, doctorImage, doctorName })
         </div>
 
         <div
-          className={`relative flex h-36 w-36 items-center justify-center rounded-full bg-gradient-to-br ${currentStyle.core} shadow-[0_12px_40px_rgba(15,23,42,0.2)] transition-transform duration-500 ${
+          className={`relative flex h-24 w-24 items-center justify-center rounded-full bg-gradient-to-br ${currentStyle.core} shadow-[0_12px_32px_rgba(15,23,42,0.18)] transition-transform duration-500 sm:h-[7.5rem] sm:w-[7.5rem] ${
             phase === "speaking" ? "scale-110" : phase === "processing" ? "scale-105" : "scale-100"
           }`}
           style={pulseStyle(phase)}
         >
           <div
-            className={`relative flex h-28 w-28 items-center justify-center rounded-full bg-white/75 ${
+            className={`relative flex h-16 w-16 items-center justify-center rounded-full bg-white/80 sm:h-[5.5rem] sm:w-[5.5rem] ${
               isAlive ? "animate-[pulse_2.2s_ease-in-out_infinite]" : ""
             }`}
           >
@@ -144,12 +144,12 @@ export default function VoiceOrb({ phase, statusText, doctorImage, doctorName })
                 <img
                   src={doctorImage}
                   alt={doctorName || "Doctor avatar"}
-                  className="h-24 w-24 object-contain"
+                  className="h-14 w-14 object-contain sm:h-[4.5rem] sm:w-[4.5rem]"
                   loading="eager"
                   referrerPolicy="no-referrer"
                 />
                 <span
-                  className={`absolute left-1/2 top-[61%] block h-2.5 w-5 -translate-x-1/2 rounded-full bg-slate-800 ${
+                  className={`absolute left-1/2 top-[61%] block h-1.5 w-4 -translate-x-1/2 rounded-full bg-slate-800 ${
                     isTalking ? "" : ""
                   }`}
                   style={mouthStyle(isTalking)}
@@ -159,13 +159,13 @@ export default function VoiceOrb({ phase, statusText, doctorImage, doctorName })
           </div>
         </div>
 
-        <div className="absolute bottom-8 flex items-end gap-1.5">
+        <div className="absolute bottom-3 flex items-end gap-1 sm:bottom-4">
           {bars.map((height, index) => (
             <span
               key={`${phase}-${index}`}
-              className="w-1.5 rounded-full bg-white/80 shadow-[0_0_14px_rgba(255,255,255,0.35)]"
+              className="w-1 rounded-full bg-white/80 shadow-[0_0_14px_rgba(255,255,255,0.35)]"
               style={{
-                height,
+                height: Math.max(8, Math.round(height * 0.72)),
                 animation:
                   phase === "idle"
                     ? "none"
@@ -176,11 +176,15 @@ export default function VoiceOrb({ phase, statusText, doctorImage, doctorName })
         </div>
       </div>
 
-      <div className="space-y-2 text-center">
-        <div className="inline-flex items-center rounded-full border border-white/70 bg-white/80 px-3 py-1 text-xs font-semibold tracking-[0.2em] text-slate-600 uppercase">
+      <div className="w-full space-y-1.5 text-center sm:space-y-2">
+        <div className="inline-flex items-center rounded-full border border-white/70 bg-white/80 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-600 sm:px-3 sm:text-[11px] sm:tracking-[0.2em]">
           {currentStyle.label}
         </div>
-        {statusText ? <p className="text-lg font-semibold text-slate-900">{statusText}</p> : null}
+        {statusText ? (
+          <p className="mx-auto max-w-[11.5rem] text-sm font-semibold leading-5 text-slate-900 sm:max-w-[13rem] sm:text-base sm:leading-6">
+            {statusText}
+          </p>
+        ) : null}
       </div>
     </div>
   );
