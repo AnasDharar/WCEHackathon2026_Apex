@@ -141,11 +141,8 @@ export default function Overview() {
         <div className="grid grid-cols-1 md:grid-cols-12 gap-8 pb-20 text-gray-900">
           
           {/* Quick Actions - Irregular 7 / 5 split */}
-          <div className="md:col-span-7 flex items-center justify-between rounded-xl bg-emerald-700/70 p-6 text-white shadow-sm ring-1 ring-emerald-800/50 opacity-95 cursor-not-allowed">
+          <div className="md:col-span-7 flex items-center justify-between rounded-xl bg-emerald-700/70 p-6 text-white shadow-sm ring-1 ring-emerald-800/50 opacity-95">
             <div>
-              <div className="mb-2 inline-flex items-center rounded-full bg-white/20 px-3 py-1 text-[11px] font-bold uppercase tracking-wider text-white ring-1 ring-white/30">
-                Coming Soon
-              </div>
               <h3 className="text-xl font-bold tracking-tight text-white mb-1">Therapy Room</h3>
               <p className="text-emerald-100 text-sm font-medium">Talk to our AI Voice Agents</p>
             </div>
