@@ -91,13 +91,13 @@ export default function PatientDossierPage() {
       {activeTab === "insights" && (
         <div className="space-y-6">
           
-          <div className={`${static_card_style} bg-emerald-700 text-white ring-emerald-800 overflow-hidden relative`}>
+          <div className={`${static_card_style} bg-emerald-700 text-black ring-emerald-800 overflow-hidden relative`}>
              <div className="absolute top-0 right-0 p-8 opacity-10 pointer-events-none">
                  <Activity className="w-48 h-48" />
              </div>
              <div className="relative z-10 max-w-3xl">
-               <h2 className="text-lg font-bold mb-3 flex items-center gap-2"><Sparkles className="w-5 h-5 text-emerald-300"/> Clinical Summary</h2>
-               <p className="text-base leading-relaxed text-emerald-50">{insights?.summary || "No AI summary available."}</p>
+               <h2 className="text-lg font-bold mb-3 flex items-center gap-2"><Sparkles className="w-5 h-5 text-emerald-800"/> Clinical Summary</h2>
+               <p className="text-base leading-relaxed text-emerald-800">{insights?.summary || "No AI summary available."}</p>
              </div>
           </div>
 

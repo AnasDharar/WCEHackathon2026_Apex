@@ -4,6 +4,7 @@ import { useState } from "react";
 import { BookOpen, Video, FileText, Send, CheckCircle, Search, PlayCircle } from "lucide-react";
 import { api } from "@/lib/api";
 import Header from "@/components/Header";
+import { useLanguage } from "@/context/LanguageContext";
 
 const static_card_style = "rounded-xl bg-white p-6 shadow-sm ring-1 ring-black/5 hover:ring-black/10 hover:shadow-md transition-all duration-200 ease-in-out hover:-translate-y-0.5 flex flex-col h-full";
 
@@ -15,6 +16,7 @@ const RESOURCES = [
 ];
 
 export default function TherapistResourcesPage() {
+  const { t } = useLanguage();
   const [search, setSearch] = useState("");
   const [selectedResource, setSelectedResource] = useState(null);
   const [showingSendModal, setShowingSendModal] = useState(false);
@@ -61,15 +63,15 @@ export default function TherapistResourcesPage() {
     <div className="pb-20 space-y-8">
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-4">
         <Header 
-          title="Resource Library" 
-          subtitle="Curate and dispatch clinical exercises directly to patient portals." 
+          title={t("Resource Library")} 
+          subtitle={t("Curate and dispatch clinical exercises directly to patient portals.")} 
         />
         
         <div className="relative w-full md:w-80 lg:w-96 md:mb-2">
           <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
           <input 
             type="text"
-            placeholder="Search resources..."
+            placeholder={t("Search resources...")}
             value={search}
             onChange={e => setSearch(e.target.value)}
             className="w-full pl-10 pr-4 py-2.5 bg-white ring-1 ring-black/5 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none shadow-sm text-sm font-medium text-gray-800"

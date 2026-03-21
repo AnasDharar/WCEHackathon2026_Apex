@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 
 import Header from "@/components/Header";
+import { useLanguage } from "@/context/LanguageContext";
 import { api } from "@/lib/api";
 import { getUserSession } from "@/lib/userSession";
 
@@ -16,6 +17,7 @@ const initialPostForm = {
 };
 
 export default function Community() {
+  const { t } = useLanguage();
   const [sessionUser, setSessionUser] = useState(null);
   const [stats, setStats] = useState([]);
   const [posts, setPosts] = useState([]);
@@ -67,7 +69,7 @@ export default function Community() {
         setMentors(mentorsRes?.data || []);
       } catch (err) {
         if (mounted) {
-          setError(err.message || "Failed to load community.");
+          setError(err.message || t("Failed to load community."));
         }
       } finally {
         if (mounted) {
@@ -97,11 +99,11 @@ export default function Community() {
 
   const createPost = async () => {
     if (!postForm.title.trim()) {
-      setError("Title cannot be empty.");
+      setError(t("Title cannot be empty."));
       return;
     }
     if (!postForm.content.trim()) {
-      setError("Body cannot be empty.");
+      setError(t("Body cannot be empty."));
       return;
     }
 
@@ -120,7 +122,7 @@ export default function Community() {
       setPostForm((prev) => ({ ...prev, title: "", content: "" }));
       await refreshStats();
     } catch (err) {
-      setError(err.message || "Unable to create post.");
+      setError(err.message || t("Unable to create post."));
     } finally {
       setPosting(false);
     }
@@ -132,15 +134,15 @@ export default function Community() {
       const res = await api.post(`/community/posts/${postId}/vote`, { value });
       setPosts((prev) => prev.map((post) => (post.id === postId ? res?.data : post)));
     } catch (err) {
-      setError(err.message || "Unable to vote.");
+      setError(err.message || t("Unable to vote."));
     }
   };
 
   return (
     <>
       <Header
-        title="Community"
-        subtitle="A safe space to share stories, support each other, and grow together."
+        title={t("Community")}
+        subtitle={t("A safe space to share stories, support each other, and grow together.")}
       />
 
       <div className="space-y-8 pb-20">
@@ -190,21 +192,21 @@ export default function Community() {
                     <span className="text-gray-800 font-bold tracking-widest uppercase text-sm">{postForm.author.charAt(0)}</span>
                 </div>
                 <div>
-                   <h2 className="text-lg font-bold tracking-tight text-gray-900">Create a Post</h2>
-                   <p className="text-xs font-medium text-gray-500">Share your thoughts with the community.</p>
+                   <h2 className="text-lg font-bold tracking-tight text-gray-900">{t("Create a Post")}</h2>
+                   <p className="text-xs font-medium text-gray-500">{t("Share your thoughts with the community.")}</p>
                 </div>
               </div>
               <div className="grid grid-cols-1 gap-4 md:grid-cols-2 mb-4">
                 <input
                   value={postForm.author}
                   onChange={(e) => setPostForm((prev) => ({ ...prev, author: e.target.value }))}
-                  placeholder="Your display name"
+                  placeholder={t("Your display name")}
                   className="rounded-xl border-x-0 border-t-0 border-b-2 border-gray-100 bg-gray-50 px-4 py-3 text-[15px] font-medium text-gray-900 outline-none transition-all duration-200 focus:bg-gray-100 focus:border-emerald-500 placeholder-gray-400"
                 />
                 <input
                   value={postForm.role}
                   onChange={(e) => setPostForm((prev) => ({ ...prev, role: e.target.value }))}
-                  placeholder="Your role (e.g. Member, Peer)"
+                  placeholder={t("Your role (e.g. Member, Peer)")}
                   className="rounded-xl border-x-0 border-t-0 border-b-2 border-gray-100 bg-gray-50 px-4 py-3 text-[15px] font-medium text-gray-900 outline-none transition-all duration-200 focus:bg-gray-100 focus:border-emerald-500 placeholder-gray-400"
                 />
               </div>
@@ -212,7 +214,7 @@ export default function Community() {
                 <input
                   value={postForm.title}
                   onChange={(e) => setPostForm((prev) => ({ ...prev, title: e.target.value }))}
-                  placeholder="Post title"
+                  placeholder={t("Post title")}
                   className="rounded-xl border-x-0 border-t-0 border-b-2 border-gray-100 bg-gray-50 px-4 py-3 text-[15px] font-medium text-gray-900 outline-none transition-all duration-200 focus:bg-gray-100 focus:border-emerald-500 placeholder-gray-400 md:col-span-2"
                 />
                 <select
@@ -231,7 +233,7 @@ export default function Community() {
                 value={postForm.content}
                 onChange={(e) => setPostForm((prev) => ({ ...prev, content: e.target.value }))}
                 rows={4}
-                placeholder="What's on your mind? Share context, what you've tried, and what you need help with..."
+                placeholder={t("What’s on your mind? Share context, what you’ve tried, and what you need help with...")}
                 className="w-full resize-none rounded-xl border-x-0 border-t-0 border-b-2 border-gray-100 bg-gray-50 p-4 text-[15px] font-medium leading-relaxed text-gray-900 outline-none transition-all duration-200 focus:bg-gray-100 focus:border-emerald-500 placeholder-gray-400"
               />
               <div className="mt-4 flex justify-end">
@@ -244,12 +246,12 @@ export default function Community() {
                     {posting ? (
                         <>
                            <div className="w-4 h-4 rounded-full border-2 border-white/30 border-t-white animate-spin"></div>
-                           Publishing...
+                           {t("Publishing...")}
                         </>
                     ) : (
                         <>
                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5"><path strokeLinecap="round" strokeLinejoin="round" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" /></svg>
-                           Publish Post
+                           {t("Publish Post")}
                         </>
                     )}
                   </button>

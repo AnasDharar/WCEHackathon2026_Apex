@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { Users, ShieldAlert, Stethoscope, BookOpen, Calendar, Bell, LayoutDashboard, LogOut, ShieldCheck } from "lucide-react";
+import { useLanguage } from "@/context/LanguageContext";
 import { getUserSession } from "@/lib/userSession";
 import { api } from "@/lib/api";
 import { NotificationProvider } from "@/context/NotificationContext";
@@ -51,6 +52,7 @@ const navItems = [
 ];
 
 export default function AdminLayout({ children }) {
+  const { t } = useLanguage();
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [authChecked, setAuthChecked] = useState(false);
   const pathname = usePathname();
@@ -95,8 +97,10 @@ export default function AdminLayout({ children }) {
     verifyAdmin();
   }, [router]);
 
+  const localizedNavItems = navItems.map((item) => ({ ...item, label: t(item.label) }));
+
   if (!authChecked) {
-    return <div className="min-h-screen flex items-center justify-center text-sm text-gray-500">Loading Admin Panel...</div>;
+    return <div className="min-h-screen flex items-center justify-center text-sm text-gray-500">{t("Loading Admin Panel...")}</div>;
   }
 
   return (
@@ -137,7 +141,7 @@ export default function AdminLayout({ children }) {
                 <div className="bg-emerald-50 border border-emerald-100 px-3 py-1 rounded-full flex items-center gap-1.5 mt-2 shadow-sm relative overflow-hidden group">
                   <div className="absolute inset-0 bg-emerald-100 opacity-0 group-hover:opacity-50 transition-opacity"></div>
                   <ShieldCheck className="w-3.5 h-3.5 text-emerald-600 relative z-10" />
-                  <span className="text-[10px] font-bold text-emerald-700 tracking-wider uppercase relative z-10">Administrator</span>
+                  <span className="text-[10px] font-bold text-emerald-700 tracking-wider uppercase relative z-10">{t("Administrator")}</span>
                 </div>
               )}
             </div>
@@ -147,7 +151,7 @@ export default function AdminLayout({ children }) {
 
             {/* Navigation */}
             <nav className="flex-1 px-3 pt-4 pb-3 space-y-1 overflow-y-auto w-full scrollbar-none">
-              {navItems.map((item) => {
+              {localizedNavItems.map((item) => {
                 const Icon = item.icon;
                 const isActive = pathname === item.href;
                 return (
@@ -189,14 +193,14 @@ export default function AdminLayout({ children }) {
                 className={`group w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-neutral-700 hover:text-red-600 hover:bg-red-50/80 transition-all duration-200 ease-in-out ${
                   sidebarCollapsed ? "justify-center" : ""
                 }`}
-                title={sidebarCollapsed ? "Sign Out" : ""}
+                title={sidebarCollapsed ? t("Sign Out") : ""}
               >
                 <div className="group-hover:scale-105 transition-all duration-200 text-gray-400 group-hover:text-red-500">
                   <LogOut className="w-5 h-5" />
                 </div>
                 {!sidebarCollapsed && (
                   <span className="text-[14px] font-medium tracking-tight">
-                    Sign Out
+                    {t("Sign Out")}
                   </span>
                 )}
               </button>

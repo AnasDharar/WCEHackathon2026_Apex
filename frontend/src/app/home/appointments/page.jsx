@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 
 import Header from "@/components/Header";
+import { useLanguage } from "@/context/LanguageContext";
 import { useNotification } from "@/context/NotificationContext";
 import { api } from "@/lib/api";
 import { getUserSession } from "@/lib/userSession";
@@ -35,6 +36,7 @@ function counselorInitials(name) {
 }
 
 export default function Appointments() {
+  const { t } = useLanguage();
   const { addNotification } = useNotification() || { addNotification: () => {} };
 
   const [currentUser, setCurrentUser] = useState(null);
@@ -134,7 +136,7 @@ export default function Appointments() {
         setPrepChecklist(checklistRes?.data || []);
       } catch (err) {
         if (mounted) {
-          setError(err.message || "Failed to load appointments.");
+          setError(err.message || t("Failed to load appointments."));
         }
       } finally {
         if (mounted) {
@@ -196,11 +198,11 @@ export default function Appointments() {
 
   const bookAppointment = async () => {
     if (!selectedCounselor) {
-      setError("Select a counselor first.");
+      setError(t("Select a counselor first."));
       return;
     }
     if (!bookingData.preferred_slot) {
-      setError("Please choose a preferred slot.");
+      setError(t("Please choose a preferred slot."));
       return;
     }
 
@@ -230,7 +232,7 @@ export default function Appointments() {
       setBookingData({ preferred_slot: "", mode: "Online", location: "", notes: "" });
       await refreshAppointmentsData();
     } catch (err) {
-      setError(err.message || "Failed to book appointment.");
+      setError(err.message || t("Failed to load appointments."));
     } finally {
       setBooking(false);
     }
@@ -239,7 +241,7 @@ export default function Appointments() {
   const rescheduleAppointment = async (appointmentId) => {
     const preferred_slot = rescheduleSelection[appointmentId];
     if (!preferred_slot) {
-      setError("Select a slot before rescheduling.");
+      setError(t("Select a slot before rescheduling."));
       return;
     }
 
@@ -258,7 +260,7 @@ export default function Appointments() {
 
       await refreshAppointmentsData();
     } catch (err) {
-      setError(err.message || "Failed to reschedule.");
+      setError(err.message || t("Select a slot before rescheduling."));
     } finally {
       setReschedulingId(null);
     }
@@ -267,10 +269,10 @@ export default function Appointments() {
   return (
     <>
       <Header
-        title="Appointments"
+        title={t("Appointments")}
         subtitle={`${
           currentUser?.first_name ? `${currentUser.first_name}, ` : ""
-        }book confidential sessions, track upcoming appointments, and reschedule quickly.`}
+        }${t("book confidential sessions, track upcoming appointments, and reschedule quickly.")}`}
       />
 
       {error && (
@@ -293,15 +295,15 @@ export default function Appointments() {
            <div className="w-20 h-20 bg-emerald-100 rounded-full flex items-center justify-center mb-6 ring-4 ring-emerald-50">
              <svg className="w-10 h-10 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
            </div>
-           <h2 className="text-3xl font-bold tracking-tight text-gray-900 mb-4">Therapist Portal</h2>
+           <h2 className="text-3xl font-bold tracking-tight text-gray-900 mb-4">{t("Therapist Portal")}</h2>
            <p className="text-lg text-gray-600 max-w-lg mb-10 leading-relaxed">
-             This booking page is designed for patients. Visit your dedicated Therapist Dashboard to view and manage your scheduled appointments.
+             {t("This booking page is designed for patients. Visit your dedicated Therapist Dashboard to view and manage your scheduled appointments.")}
            </p>
            <button 
              onClick={() => router.push('/therapist')}
              className="rounded-xl bg-emerald-600 px-8 py-4 text-base font-bold text-white transition-all duration-200 hover:bg-emerald-700 hover:shadow-lg active:scale-95 focus:outline-none focus:ring-4 focus:ring-emerald-500/30"
            >
-             Go to Therapist Dashboard
+             {t("Go to Therapist Dashboard")}
            </button>
         </div>
       ) : (

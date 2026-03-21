@@ -4,10 +4,12 @@ import { useEffect, useState } from "react";
 import { api } from "@/lib/api";
 import { Plus, Trash2, Link as LinkIcon, BookOpen, FileText, Headphones, Video } from "lucide-react";
 import Header from "@/components/Header";
+import { useLanguage } from "@/context/LanguageContext";
 
 const static_card_style = "rounded-xl bg-white p-6 shadow-sm ring-1 ring-black/5 hover:ring-black/10 hover:-translate-y-0.5 hover:shadow-md transition-all duration-200 ease-in-out flex flex-col";
 
 export default function ResourcesAdminPage() {
+  const { t } = useLanguage();
   const [resources, setResources] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showAddForm, setShowAddForm] = useState(false);
@@ -76,8 +78,8 @@ export default function ResourcesAdminPage() {
     <div className="pb-20 space-y-8 h-full">
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-4">
         <Header 
-          title="Resource Library Management"
-          subtitle="Curate and organize psychoeducational literature, hotlines, and media."
+          title={t("Resource Library Management")}
+          subtitle={t("Curate and organize psychoeducational literature, hotlines, and media.")}
         />
         <button 
           onClick={() => setShowAddForm(!showAddForm)} 

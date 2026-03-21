@@ -5,10 +5,12 @@ import { api } from "@/lib/api";
 import { Users, Search, Clock, ChevronRight } from "lucide-react";
 import Link from "next/link";
 import Header from "@/components/Header";
+import { useLanguage } from "@/context/LanguageContext";
 
 const static_card_style = "rounded-xl bg-white p-6 shadow-sm ring-1 ring-black/5 hover:ring-black/10 hover:shadow-md transition-all duration-200 ease-in-out hover:-translate-y-0.5";
 
 export default function TherapistPatientsPage() {
+  const { t } = useLanguage();
   const [patients, setPatients] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
@@ -40,15 +42,15 @@ export default function TherapistPatientsPage() {
     <div className="pb-20 space-y-8">
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8">
         <Header
-          title="Patient Directory"
-          subtitle="Manage and monitor the individuals assigned to your care."
+          title={t("Patient Directory")}
+          subtitle={t("Manage and monitor the individuals assigned to your care.")}
         />
         
         <div className="relative w-full md:w-80 lg:w-96 md:mb-2">
           <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
           <input 
             type="text"
-            placeholder="Search patients..."
+            placeholder={t("Search patients...")}
             value={search}
             onChange={e => setSearch(e.target.value)}
             className="w-full pl-10 pr-4 py-2.5 bg-white ring-1 ring-black/5 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none shadow-sm text-sm text-gray-800"

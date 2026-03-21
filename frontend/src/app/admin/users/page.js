@@ -3,10 +3,12 @@
 import { useEffect, useState } from "react";
 import { api } from "@/lib/api";
 import Header from "@/components/Header";
+import { useLanguage } from "@/context/LanguageContext";
 
 const static_card_style = "rounded-xl bg-white shadow-sm ring-1 ring-black/5";
 
 export default function UsersAdminPage() {
+  const { t } = useLanguage();
   const [users, setUsers] = useState([]);
   const [selectedUser, setSelectedUser] = useState(null);
   const [summary, setSummary] = useState(null);
@@ -55,8 +57,8 @@ export default function UsersAdminPage() {
   return (
     <div className="pb-20 space-y-8 h-full">
       <Header 
-        title="User Management"
-        subtitle="View, monitor, and manage the access of registered users across the platform."
+        title={t("User Management")}
+        subtitle={t("View, monitor, and manage the access of registered users across the platform.")}
       />
       
       <div className={`${static_card_style} overflow-hidden p-0!`}>

@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 
 import Header from "@/components/Header";
+import { useLanguage } from "@/context/LanguageContext";
 import { api } from "@/lib/api";
 
 const categoryTabs = [
@@ -15,6 +16,7 @@ const categoryTabs = [
 const static_card_style = "rounded-xl bg-white p-6 shadow-sm ring-1 ring-black/5";
 
 export default function Events() {
+  const { t } = useLanguage();
   const [featured, setFeatured] = useState(null);
   const [upcoming, setUpcoming] = useState([]);
   const [weeklyLineup, setWeeklyLineup] = useState([]);
@@ -54,7 +56,7 @@ export default function Events() {
         );
       } catch (err) {
         if (mounted) {
-          setError(err.message || "Failed to load events.");
+          setError(err.message || t("Failed to load events."));
         }
       } finally {
         if (mounted) {
@@ -88,7 +90,7 @@ export default function Events() {
         );
       }
     } catch (err) {
-      setError(err.message || "Unable to update registration.");
+      setError(err.message || t("Unable to update registration."));
     } finally {
       setActionLoading((prev) => ({ ...prev, [key]: false }));
     }
@@ -97,8 +99,8 @@ export default function Events() {
   return (
     <>
       <Header
-        title="Events"
-        subtitle="Register for workshops, masterclasses, and community circles."
+        title={t("Events")}
+        subtitle={t("Register for workshops, masterclasses, and community circles.")}
       />
 
       {error && (
@@ -120,7 +122,7 @@ export default function Events() {
               <div className="pointer-events-none absolute -right-20 -top-20 h-56 w-56 rounded-full bg-emerald-200/40 blur-3xl" />
               <div className="relative z-10">
                 <span className="mb-3 inline-flex items-center rounded-full bg-white/80 backdrop-blur-sm px-3 py-1 text-xs font-bold uppercase tracking-wider text-gray-900 shadow-sm ring-1 ring-emerald-100">
-                  Featured Event
+                  {t("Featured Event")}
                 </span>
                 <h2 className="mt-2 text-3xl font-bold tracking-tight text-emerald-950">{featured.title}</h2>
                 <div className="mt-4 flex flex-wrap items-center gap-3 text-sm font-medium text-gray-900">
@@ -135,7 +137,7 @@ export default function Events() {
                   type="button"
                   className="mt-6 rounded-xl bg-emerald-600 px-6 py-3 text-sm font-bold text-white transition-all duration-200 hover:bg-emerald-700 hover:shadow-md active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 cursor-pointer"
                 >
-                  Join Featured Event
+                  {t("Join Featured Event")}
                 </button>
               </div>
             </div>
@@ -163,7 +165,7 @@ export default function Events() {
               {upcoming.length === 0 ? (
                 <div className="w-full flex flex-col items-center justify-center p-12 border-2 border-dashed border-gray-200 rounded-xl bg-gray-50/50">
                     <svg className="w-10 h-10 text-gray-400 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
-                    <span className="text-base font-medium text-gray-500 text-center max-w-sm">No upcoming events found for this category.</span>
+                    <span className="text-base font-medium text-gray-500 text-center max-w-sm">{t("No upcoming events found for this category.")}</span>
                 </div>
               ) : (
                 upcoming.map((event) => (

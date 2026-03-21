@@ -4,10 +4,12 @@ import { useEffect, useState } from "react";
 import { api } from "@/lib/api";
 import { CheckCircle, Trash2 } from "lucide-react";
 import Header from "@/components/Header";
+import { useLanguage } from "@/context/LanguageContext";
 
 const static_card_style = "rounded-xl bg-white p-6 shadow-sm ring-1 ring-black/5";
 
 export default function ModerationPage() {
+  const { t } = useLanguage();
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -54,8 +56,8 @@ export default function ModerationPage() {
   return (
     <div className="pb-20 space-y-8 h-full max-w-5xl">
       <Header 
-        title="Moderation Queue"
-        subtitle="Review community posts automatically flagged by AI for harmful or abusive content."
+        title={t("Moderation Queue")}
+        subtitle={t("Review community posts automatically flagged by AI for harmful or abusive content.")}
       />
       
       {posts.length === 0 ? (

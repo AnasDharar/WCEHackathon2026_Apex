@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 
 import Header from "@/components/Header";
+import { useLanguage } from "@/context/LanguageContext";
 import { api } from "@/lib/api";
 
 const monthNames = [
@@ -24,6 +25,7 @@ const monthNames = [
 const static_card_style = "rounded-xl bg-white p-6 shadow-sm ring-1 ring-black/5";
 
 function HabitTrackerContent() {
+  const { t } = useLanguage();
   const searchParams = useSearchParams();
   const now = new Date();
   const [year, setYear] = useState(now.getFullYear());
@@ -144,7 +146,7 @@ function HabitTrackerContent() {
         setOnboardingStatus(onboardingRes?.data || { completed: true, habit_count: 0 });
       } catch (err) {
         if (mounted) {
-          setError(err.message || "Failed to load habit tracker.");
+          setError(err.message || t("Failed to load habit tracker."));
         }
       } finally {
         if (mounted) {
@@ -183,7 +185,7 @@ function HabitTrackerContent() {
         setOnboardingAnswers(initialAnswers);
       } catch (err) {
         if (mounted) {
-          setError(err.message || "Could not load onboarding questions.");
+          setError(err.message || t("Could not load onboarding questions."));
         }
       } finally {
         if (mounted) setLoadingOnboarding(false);
@@ -222,7 +224,7 @@ function HabitTrackerContent() {
       setTodayHabits((prev) =>
         prev.map((item) => (item.id === habit.id ? { ...item, done: habit.done } : item))
       );
-      setError(err.message || "Could not update habit.");
+      setError(err.message || t("Could not update habit."));
     } finally {
       setUpdatingHabitId(null);
     }
@@ -246,7 +248,7 @@ function HabitTrackerContent() {
           : null
       );
     } catch (err) {
-      setError(err.message || "Habit coach request failed.");
+      setError(err.message || t("Habit coach request failed."));
     } finally {
       setLoadingCoach(false);
     }
@@ -270,7 +272,7 @@ function HabitTrackerContent() {
   const addHabit = async () => {
     const title = newHabit.title.trim();
     if (!title) {
-      setError("Habit title is required.");
+      setError(t("Habit title is required."));
       return;
     }
     setCreatingHabit(true);
@@ -290,7 +292,7 @@ function HabitTrackerContent() {
       });
       await refreshHabitsAndStats();
     } catch (err) {
-      setError(err.message || "Could not create habit.");
+      setError(err.message || t("Could not create habit."));
     } finally {
       setCreatingHabit(false);
     }
@@ -303,7 +305,7 @@ function HabitTrackerContent() {
       await api.remove(`/habits/${habitId}`);
       await refreshHabitsAndStats();
     } catch (err) {
-      setError(err.message || "Could not delete habit.");
+      setError(err.message || t("Could not delete habit."));
     } finally {
       setDeletingHabitId(null);
     }
@@ -317,7 +319,7 @@ function HabitTrackerContent() {
       setOnboardingStatus({ completed: true, habit_count: 1 });
       await refreshHabitsAndStats();
     } catch (err) {
-      setError(err.message || "Could not save onboarding.");
+      setError(err.message || t("Could not save onboarding."));
     } finally {
       setSubmittingOnboarding(false);
     }
@@ -326,8 +328,8 @@ function HabitTrackerContent() {
   return (
     <>
       <Header
-        title="Exercises & Habits"
-        subtitle="Your interactive wellbeing routines and daily tracking."
+        title={t("Exercises & Habits")}
+        subtitle={t("Your interactive wellbeing routines and daily tracking.")}
       />
 
       {error && (
@@ -349,13 +351,13 @@ function HabitTrackerContent() {
         <div className="pb-20 text-gray-900">
           {(!onboardingStatus.completed || onboardingStatus.habit_count === 0) && (
             <section className="mb-8 rounded-xl bg-emerald-50 ring-1 ring-emerald-200 p-6 shadow-sm">
-              <h2 className="text-xl font-bold tracking-tight text-gray-900">Quick Habit Setup</h2>
+              <h2 className="text-xl font-bold tracking-tight text-gray-900">{t("Quick Habit Setup")}</h2>
               <p className="mt-2 text-sm text-gray-900 font-medium">
-                Answer these questions once. We will auto-create a starter habit plan for you.
+                {t("Answer these questions once. We will auto-create a starter habit plan for you.")}
               </p>
 
               {loadingOnboarding ? (
-                <p className="mt-4 text-sm font-semibold text-gray-800">Loading questions...</p>
+                <p className="mt-4 text-sm font-semibold text-gray-800">{t("Loading questions...")}</p>
               ) : (
                 <div className="mt-6 space-y-6">
                   {onboardingQuestions.map((q) => (
@@ -387,7 +389,7 @@ function HabitTrackerContent() {
                     disabled={submittingOnboarding}
                     className="rounded-xl ring-1 ring-emerald-700 bg-emerald-600 px-6 py-3 text-sm font-bold text-white transition-all duration-200 hover:bg-emerald-700 hover:shadow-md active:scale-[0.98] disabled:opacity-60 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 cursor-pointer"
                   >
-                    {submittingOnboarding ? "Creating your habits..." : "Create My Starter Habits"}
+                    {submittingOnboarding ? t("Creating your habits...") : t("Create My Starter Habits")}
                   </button>
                 </div>
               )}

@@ -1,4 +1,5 @@
 import "./globals.css";
+import { LanguageProvider } from "@/context/LanguageContext";
 
 export const metadata = {
   title: "Manah Arogya",
@@ -23,7 +24,7 @@ export default function RootLayout({ children }) {
           "--font-jost": "system-ui, sans-serif",
         }}
       >
-        {children}
+        <LanguageProvider>{children}</LanguageProvider>
       </body>
     </html>
   );

@@ -3,6 +3,7 @@ import { useEffect, useState, useRef } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { NotificationProvider } from "@/context/NotificationContext";
+import { useLanguage } from "@/context/LanguageContext";
 import { getUserSession } from "@/lib/userSession";
 import { api } from "@/lib/api";
 import MoodCheckInModal from "@/components/MoodCheckInModal";
@@ -128,6 +129,7 @@ const navItems = [
 ];
 
 export default function HomeLayout({ children }) {
+  const { t } = useLanguage();
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [authChecked, setAuthChecked] = useState(false);
   const [userRole, setUserRole] = useState("user");
@@ -184,8 +186,10 @@ export default function HomeLayout({ children }) {
     };
   }, [authChecked, pathname]);
 
+  const localizedNavItems = navItems.map((item) => ({ ...item, label: t(item.label) }));
+
   if (!authChecked) {
-    return <div className="min-h-screen flex items-center justify-center text-sm text-gray-500">Loading...</div>;
+    return <div className="min-h-screen flex items-center justify-center text-sm text-gray-500">{t("Loading...")}</div>;
   }
 
   return (
@@ -252,7 +256,7 @@ export default function HomeLayout({ children }) {
 
           {/* Navigation */}
           <nav className="flex-1 px-3 pt-4 pb-3 space-y-1 overflow-y-auto">
-            {navItems.filter(item => !(userRole === "therapist" && item.id === "appointments")).map((item) => {
+            {localizedNavItems.filter(item => !(userRole === "therapist" && item.id === "appointments")).map((item) => {
               const Icon = item.icon;
               const isActive = pathname === item.href;
               return (
@@ -277,24 +281,24 @@ export default function HomeLayout({ children }) {
               <Link
                 href="/admin"
                 className={`group w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 ease-in-out text-amber-700 hover:bg-amber-50 hover:text-amber-900 ${sidebarCollapsed ? "justify-center" : ""}`}
-                title={sidebarCollapsed ? "Admin Panel" : ""}
+                title={sidebarCollapsed ? t("Admin Panel") : ""}
               >
                 <div className="group-hover:scale-105 transition-all duration-200">
                   <ShieldIcon />
                 </div>
-                {!sidebarCollapsed && <span className="text-[14px] font-bold tracking-tight">Admin Panel</span>}
+                {!sidebarCollapsed && <span className="text-[14px] font-bold tracking-tight">{t("Admin Panel")}</span>}
               </Link>
             )}
             {userRole === "therapist" && (
               <Link
                 href="/therapist"
                 className={`group w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 ease-in-out text-emerald-700 hover:bg-emerald-50 hover:text-emerald-900 mt-2 ${sidebarCollapsed ? "justify-center" : ""}`}
-                title={sidebarCollapsed ? "Therapist Panel" : ""}
+                title={sidebarCollapsed ? t("Therapist Panel") : ""}
               >
                 <div className="group-hover:scale-105 transition-all duration-200">
                   <AppointmentsIcon />
                 </div>
-                {!sidebarCollapsed && <span className="text-[14px] font-bold tracking-tight">Therapist Panel</span>}
+                {!sidebarCollapsed && <span className="text-[14px] font-bold tracking-tight">{t("Therapist Panel")}</span>}
               </Link>
             )}
           </nav>
@@ -305,12 +309,12 @@ export default function HomeLayout({ children }) {
             <a
               href="#"
               className={`group w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-neutral-700 hover:text-neutral-900 hover:bg-emerald-50/50 transition-all duration-200 ease-in-out ${sidebarCollapsed ? "justify-center" : ""}`}
-              title={sidebarCollapsed ? "Help & Support" : ""}
+              title={sidebarCollapsed ? t("Help & Support") : ""}
             >
               <div className="group-hover:scale-105 group-hover:text-gray-700 transition-all duration-200">
                 <HelpIcon />
               </div>
-              {!sidebarCollapsed && <span className="text-[14px] font-medium tracking-tight">Help & Support</span>}
+              {!sidebarCollapsed && <span className="text-[14px] font-medium tracking-tight">{t("Help & Support")}</span>}
             </a>
           </div>
         </aside>

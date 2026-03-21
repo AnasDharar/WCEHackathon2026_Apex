@@ -4,10 +4,12 @@ import { useEffect, useState, useRef } from "react";
 import { api } from "@/lib/api";
 import { Search, Send, Paperclip, Video, HeartPulse } from "lucide-react";
 import Header from "@/components/Header";
+import { useLanguage } from "@/context/LanguageContext";
 
 const static_card_style = "rounded-xl bg-white shadow-sm ring-1 ring-black/5";
 
 export default function TherapistMessagesPage() {
+  const { t } = useLanguage();
   const [patients, setPatients] = useState([]);
   const [selectedPatient, setSelectedPatient] = useState(null);
   const [messages, setMessages] = useState([]);
@@ -100,7 +102,7 @@ export default function TherapistMessagesPage() {
   return (
     <div className="pb-20 h-full flex flex-col">
       <div className="mb-6">
-        <Header title="Messages" subtitle="Connect with your patients securely." />
+        <Header title={t("Messages")} subtitle={t("Connect with your patients securely.")} />
       </div>
 
       <div className={`flex flex-1 ${static_card_style} overflow-hidden h-[70vh] !p-0`}>
@@ -111,7 +113,7 @@ export default function TherapistMessagesPage() {
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
               <input 
                 type="text"
-                placeholder="Search conversations..."
+                placeholder={t("Search discussions...")}
                 className="w-full pl-9 pr-3 py-2 bg-white ring-1 ring-gray-200 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none text-xs text-gray-700 shadow-sm"
               />
             </div>

@@ -3,11 +3,13 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 
 import Header from "@/components/Header";
+import { useLanguage } from "@/context/LanguageContext";
 import { api } from "@/lib/api";
 
 const static_card_style = "rounded-xl bg-white p-6 shadow-sm ring-1 ring-black/5";
 
 export default function AIChatbot() {
+  const { t } = useLanguage();
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
   const [conversationId, setConversationId] = useState(null);
@@ -44,7 +46,7 @@ export default function AIChatbot() {
         }))
       );
     } catch (err) {
-      setError(err.message || "Failed to load chat history");
+      setError(err.message || t("Failed to load chat history"));
     } finally {
       setLoading(false);
     }
@@ -85,7 +87,7 @@ export default function AIChatbot() {
       const id = createRes?.data?.id;
       setConversationId(id || null);
     } catch (err) {
-      setError(err.message || "Failed to create conversation");
+      setError(err.message || t("Failed to create conversation"));
     }
   };
 
@@ -176,7 +178,7 @@ export default function AIChatbot() {
       });
       setMessages((prev) => prev.map((m) => (m.id === assistantMsgId ? { ...m, streaming: false } : m)));
     } catch (err) {
-      setError(err.message || "Failed to send message");
+      setError(err.message || t("Failed to send message"));
     } finally {
       setSending(false);
     }
@@ -185,8 +187,8 @@ export default function AIChatbot() {
   return (
     <>
       <Header
-        title="Aura AI Context"
-        subtitle="Your intelligent mental wellness assistant with direct access to your habits and sessions."
+        title={t("Aura AI Context")}
+        subtitle={t("Your intelligent mental wellness assistant with direct access to your habits and sessions.")}
       />
 
       {error && (
@@ -200,8 +202,8 @@ export default function AIChatbot() {
           
           <div className="mb-4 flex items-end justify-between px-2">
             <div>
-              <p className="text-xl font-bold tracking-tight text-gray-900">Conversation</p>
-              <p className="text-sm font-medium text-gray-500">{conversationId ? `#${conversationId}` : "Not started yet"}</p>
+              <p className="text-xl font-bold tracking-tight text-gray-900">{t("Conversation")}</p>
+              <p className="text-sm font-medium text-gray-500">{conversationId ? `#${conversationId}` : t("Not started yet")}</p>
             </div>
             <div className="flex items-center gap-3">
               {!isAtBottom && (
@@ -210,7 +212,7 @@ export default function AIChatbot() {
                   onClick={scrollToBottom}
                   className="rounded-full bg-gray-900 px-4 py-2 text-xs font-bold text-white transition-all duration-200 hover:bg-gray-800 hover:shadow-md active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-gray-900 focus:ring-offset-2 flex items-center gap-2 cursor-pointer"
                 >
-                  <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M19 14l-7 7m0 0l-7-7m7 7V3" /></svg> Latest
+                  <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M19 14l-7 7m0 0l-7-7m7 7V3" /></svg> {t("Latest")}
                 </button>
               )}
               <button
@@ -218,7 +220,7 @@ export default function AIChatbot() {
                 onClick={newChat}
                 className="rounded-full bg-white ring-1 ring-gray-200 px-5 py-2 text-sm font-bold text-gray-700 transition-all duration-200 hover:bg-gray-50 hover:shadow-sm active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-1 flex items-center gap-2 cursor-pointer"
               >
-                <svg className="w-4 h-4 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" /></svg> New Chat
+                <svg className="w-4 h-4 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" /></svg> {t("New Chat")}
               </button>
             </div>
           </div>
@@ -231,7 +233,7 @@ export default function AIChatbot() {
             {loading ? (
               <div className="flex-1 flex flex-col items-center justify-center p-8">
                   <div className="w-12 h-12 rounded-full border-4 border-emerald-200 border-t-emerald-600 animate-spin mb-4"></div>
-                  <p className="text-sm font-medium text-gray-500">Syncing context...</p>
+                  <p className="text-sm font-medium text-gray-500">{t("Syncing context...")}</p>
               </div>
             ) : sortedMessages.length ? (
               <div className="flex flex-col gap-6">

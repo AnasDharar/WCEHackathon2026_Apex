@@ -2,15 +2,17 @@
 
 import { Users, Stethoscope, AlertTriangle } from "lucide-react";
 import Header from "@/components/Header";
+import { useLanguage } from "@/context/LanguageContext";
 
 const static_card_style = "rounded-xl bg-white p-6 shadow-sm ring-1 ring-black/5";
 
 export default function AdminDashboardPage() {
+  const { t } = useLanguage();
   return (
     <div className="pb-20 space-y-8 h-full">
       <Header 
-        title="Admin Overview"
-        subtitle="Welcome back. Use the sidebar to navigate through user management, moderation, and alerts."
+        title={t("Admin Overview")}
+        subtitle={t("Welcome back. Use the sidebar to navigate through user management, moderation, and alerts.")}
       />
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -20,7 +22,7 @@ export default function AdminDashboardPage() {
             <div className="text-gray-400">
               <Users className="w-5 h-5" />
             </div>
-            <span className="text-xs font-semibold uppercase tracking-wider text-gray-500">Total Users</span>
+            <span className="text-xs font-semibold uppercase tracking-wider text-gray-500">{t("Total Users")}</span>
           </div>
           <span className="text-3xl font-bold tracking-tight text-gray-900">--</span>
         </div>
@@ -30,7 +32,7 @@ export default function AdminDashboardPage() {
             <div className="text-gray-400">
               <Stethoscope className="w-5 h-5" />
             </div>
-            <span className="text-xs font-semibold uppercase tracking-wider text-gray-500">Active Therapists</span>
+            <span className="text-xs font-semibold uppercase tracking-wider text-gray-500">{t("Active Therapists")}</span>
           </div>
           <span className="text-3xl font-bold tracking-tight text-gray-900">--</span>
         </div>
@@ -40,7 +42,7 @@ export default function AdminDashboardPage() {
             <div className="text-red-400">
               <AlertTriangle className="w-5 h-5" />
             </div>
-            <span className="text-xs font-semibold uppercase tracking-wider text-red-600">Unresolved Alerts</span>
+            <span className="text-xs font-semibold uppercase tracking-wider text-red-600">{t("Unresolved Alerts")}</span>
           </div>
           <span className="text-3xl font-bold tracking-tight text-red-600">--</span>
         </div>

@@ -4,10 +4,12 @@ import { useEffect, useState } from "react";
 import { api } from "@/lib/api";
 import { Siren, CheckCircle } from "lucide-react";
 import Header from "@/components/Header";
+import { useLanguage } from "@/context/LanguageContext";
 
 const static_card_style = "rounded-xl bg-white p-6 shadow-sm ring-1 ring-black/5 hover:ring-black/10 transition-all duration-200 ease-in-out";
 
 export default function AlertsPage() {
+  const { t } = useLanguage();
   const [alerts, setAlerts] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -47,8 +49,8 @@ export default function AlertsPage() {
   return (
     <div className="pb-20 space-y-8 h-full max-w-5xl">
       <Header 
-        title="Critical Alerts Console"
-        subtitle="High-priority notifications triggered by AI diagnostics indicating immediate clinical crises."
+        title={t("Critical Alerts Console")}
+        subtitle={t("High-priority notifications triggered by AI diagnostics indicating immediate clinical crises.")}
         icon={<Siren className="w-8 h-8 text-red-500 animate-pulse" />}
       />
 

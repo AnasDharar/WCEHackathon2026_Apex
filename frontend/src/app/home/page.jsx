@@ -3,6 +3,7 @@
 import { useEffect, useState, useMemo } from "react";
 import Header from "@/components/Header";
 import AssessmentModal from "@/components/assessment/AssessmentModal";
+import { useLanguage } from "@/context/LanguageContext";
 import { api } from "@/lib/api";
 import { getUserSession } from "@/lib/userSession";
 import { useRouter } from "next/navigation";
@@ -10,6 +11,7 @@ import { useRouter } from "next/navigation";
 const static_card_style = "rounded-xl bg-white p-6 shadow-sm ring-1 ring-black/5";
 
 export default function Overview() {
+  const { t } = useLanguage();
   const router = useRouter();
   const [dashboard, setDashboard] = useState(null);
   const [insights, setInsights] = useState(null);
@@ -39,7 +41,7 @@ export default function Overview() {
       setLatestAssessment(latestAssessmentRes?.data || null);
       setAssessmentHistory(Array.isArray(assessmentHistoryRes?.data) ? assessmentHistoryRes.data : []);
     } catch (err) {
-      setError(err.message || "Failed to load dashboard");
+      setError(err.message || t("Failed to load dashboard"));
     } finally {
       setLoading(false);
     }
@@ -103,7 +105,7 @@ export default function Overview() {
       />
 
       <Header
-        title="Dashboard"
+        title={t("Dashboard")}
         subtitle="Understand what’s happening, why, and what to do next."
       />
 

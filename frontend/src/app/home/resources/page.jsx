@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 
 import Header from "@/components/Header";
+import { useLanguage } from "@/context/LanguageContext";
 import { api } from "@/lib/api";
 
 function fallbackThumbnail(seed) {
@@ -26,6 +27,7 @@ function ResourceThumbnail({ src, alt, seed }) {
 }
 
 export default function Resources() {
+  const { t } = useLanguage();
   const [categories, setCategories] = useState([]);
   const [library, setLibrary] = useState([]);
 
@@ -67,7 +69,7 @@ export default function Resources() {
         );
       } catch (err) {
         if (mounted) {
-          setError(err.message || "Failed to load resources.");
+          setError(err.message || t("Failed to load resources."));
         }
       } finally {
         if (mounted) {
@@ -102,7 +104,7 @@ export default function Resources() {
         }
       } catch (err) {
         if (mounted) {
-          setError(err.message || "Failed to load library.");
+          setError(err.message || t("Failed to load library."));
         }
       } finally {
         if (mounted) {
@@ -120,8 +122,8 @@ export default function Resources() {
   return (
     <>
       <Header
-        title="Resources"
-        subtitle="Explore our curated library of mental wellness guides, articles, and tools."
+        title={t("Resources")}
+        subtitle={t("Explore our curated library of mental wellness guides, articles, and tools.")}
       />
 
       <div className="space-y-8 pb-20">
@@ -169,7 +171,7 @@ export default function Resources() {
                 <input
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
-                  placeholder="Search resources..."
+                  placeholder={t("Search resources...")}
                   className="w-full rounded-full bg-gray-50 pl-11 pr-4 py-3 text-sm font-medium text-gray-900 outline-none transition-all duration-200 focus:bg-white focus:ring-2 focus:ring-emerald-500 placeholder-gray-400 ring-1 ring-transparent focus:ring-emerald-500 hover:bg-gray-100"
                 />
               </div>
@@ -183,7 +185,7 @@ export default function Resources() {
                     >
                       {resourceTypes.map((type) => (
                         <option key={type} value={type}>
-                          {type === "all" ? "All Types" : type}
+                          {type === "all" ? t("All Types") : t(type)}
                         </option>
                       ))}
                     </select>
@@ -201,7 +203,7 @@ export default function Resources() {
                         />
                         <div className="w-11 h-6 bg-gray-200 rounded-full peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-emerald-100 transition duration-300 ease-in-out peer-checked:bg-emerald-500 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all"></div>
                     </div>
-                    <span className="text-sm font-bold text-gray-600 group-hover:text-gray-900 transition-colors">Recommended</span>
+                    <span className="text-sm font-bold text-gray-600 group-hover:text-gray-900 transition-colors">{t("Recommended")}</span>
                   </label>
               </div>
             </div>
@@ -220,8 +222,8 @@ export default function Resources() {
                     <div className="w-16 h-16 rounded-full bg-white ring-1 ring-gray-100 flex items-center justify-center mb-4">
                         <svg className="w-8 h-8 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.5"><path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
                     </div>
-                    <p className="text-lg font-bold text-gray-900">No resources found</p>
-                    <p className="mt-1 text-sm font-medium text-gray-500">Try adjusting your filters or search query.</p>
+                    <p className="text-lg font-bold text-gray-900">{t("No resources found")}</p>
+                    <p className="mt-1 text-sm font-medium text-gray-500">{t("Try adjusting your filters or search query.")}</p>
                </div>
             ) : (
               <div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">

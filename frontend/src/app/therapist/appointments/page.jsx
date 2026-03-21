@@ -4,10 +4,12 @@ import { useEffect, useState, useMemo } from "react";
 import { api } from "@/lib/api";
 import { CheckCircle, XCircle, Clock, Video, FileText, Calendar, Edit2, MapPin } from "lucide-react";
 import Header from "@/components/Header";
+import { useLanguage } from "@/context/LanguageContext";
 
 const static_card_style = "rounded-xl bg-white p-6 shadow-sm ring-1 ring-black/5";
 
 export default function TherapistAppointmentsPage() {
+  const { t } = useLanguage();
   const [appointments, setAppointments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [processing, setProcessing] = useState(false);
@@ -104,8 +106,8 @@ export default function TherapistAppointmentsPage() {
   return (
     <div className="pb-20 space-y-8">
       <Header
-        title="Appointments"
-        subtitle="Manage your schedule, respond to requests, and update sessions."
+        title={t("Appointments")}
+        subtitle={t("Manage your schedule, respond to requests, and update sessions.")}
       />
 
       {error && (

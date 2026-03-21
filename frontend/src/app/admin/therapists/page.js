@@ -4,10 +4,12 @@ import { useEffect, useState } from "react";
 import { api } from "@/lib/api";
 import { Plus, Trash2, MapPin, Building2, Stethoscope } from "lucide-react";
 import Header from "@/components/Header";
+import { useLanguage } from "@/context/LanguageContext";
 
 const static_card_style = "rounded-xl bg-white p-6 shadow-sm ring-1 ring-black/5 hover:ring-black/10 hover:shadow-md transition-all duration-200 ease-in-out hover:-translate-y-0.5";
 
 export default function TherapistsPage() {
+  const { t } = useLanguage();
   const [therapists, setTherapists] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showAddForm, setShowAddForm] = useState(false);
@@ -66,8 +68,8 @@ export default function TherapistsPage() {
     <div className="pb-20 space-y-8 h-full">
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-4">
         <Header 
-          title="Therapist Management"
-          subtitle="Add, view, and manage verified mental health professionals."
+          title={t("Therapist Management")}
+          subtitle={t("Add, view, and manage verified mental health professionals.")}
         />
         <button
           onClick={() => setShowAddForm(!showAddForm)}
