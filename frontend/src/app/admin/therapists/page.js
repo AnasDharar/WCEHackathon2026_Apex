@@ -16,6 +16,7 @@ export default function TherapistsPage() {
     specialty: "",
     region: "",
     institution: "",
+    user_email: "",
   });
 
   useEffect(() => {
@@ -49,7 +50,7 @@ export default function TherapistsPage() {
       const newTherapist = await api.post("/admin/therapists", formData);
       setTherapists((prev) => [...prev, newTherapist]);
       setShowAddForm(false);
-      setFormData({ name: "", specialty: "", region: "", institution: "" });
+      setFormData({ name: "", specialty: "", region: "", institution: "", user_email: "" });
     } catch (error) {
       console.error(error);
     }
@@ -99,6 +100,10 @@ export default function TherapistsPage() {
             <div>
               <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1.5">Institution</label>
               <input type="text" placeholder="e.g. Acme Health Network" value={formData.institution} onChange={(e) => setFormData({...formData, institution: e.target.value})} className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none shadow-sm text-sm font-medium" />
+            </div>
+            <div className="md:col-span-2">
+              <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1.5">Linked Login Email</label>
+              <input type="email" placeholder="Therapist Google account email" value={formData.user_email} onChange={(e) => setFormData({...formData, user_email: e.target.value})} className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none shadow-sm text-sm font-medium" />
             </div>
           </div>
           <div className="flex justify-end gap-3 mt-4 pt-4 border-t border-gray-50">

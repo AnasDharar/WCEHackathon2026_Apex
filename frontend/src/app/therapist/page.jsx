@@ -12,6 +12,7 @@ export default function TherapistDashboardPage() {
   const [stats, setStats] = useState(null);
   const [appointments, setAppointments] = useState([]);
   const [patients, setPatients] = useState([]);
+  const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -22,14 +23,16 @@ export default function TherapistDashboardPage() {
   const fetchDashboard = async () => {
     setLoading(true);
     try {
-      const [statsRes, apptsRes, patientsRes] = await Promise.all([
+      const [statsRes, apptsRes, patientsRes, notificationsRes] = await Promise.all([
         api.get("/therapist/stats"),
         api.get("/therapist/appointments"),
-        api.get("/therapist/patients")
+        api.get("/therapist/patients"),
+        api.get("/therapist/notifications?unread_only=true"),
       ]);
-      setStats(statsRes.data?.data || null);
-      setAppointments(apptsRes.data?.data || []);
-      setPatients(patientsRes.data?.data || []);
+      setStats(statsRes?.data || null);
+      setAppointments(apptsRes?.data || []);
+      setPatients(patientsRes?.data || []);
+      setNotifications(Array.isArray(notificationsRes?.data) ? notificationsRes.data : []);
     } catch (err) {
       setError(err.message || "Failed to load dashboard");
     } finally {
@@ -63,9 +66,9 @@ export default function TherapistDashboardPage() {
         <div className="flex items-center gap-4 hidden md:flex mb-2">
           <button className="relative p-3 bg-white rounded-xl ring-1 ring-black/5 hover:bg-gray-50 transition-colors shadow-sm">
             <Bell className="w-5 h-5 text-gray-600" />
-            {pendingAppointments.length > 0 && (
+            {notifications.length > 0 && (
               <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[9px] font-bold text-white ring-2 ring-white">
-                {pendingAppointments.length}
+                {notifications.length}
               </span>
             )}
           </button>
@@ -164,14 +167,14 @@ export default function TherapistDashboardPage() {
         <div className={`md:col-span-4 ${static_card_style} flex flex-col`}>
           <div className="flex justify-between items-center mb-6">
             <h2 className="text-lg font-bold tracking-tight text-gray-900">Action Items</h2>
-            <span className="bg-red-50 text-red-700 ring-1 ring-red-200 text-xs px-2.5 py-1 rounded-full font-bold">{pendingAppointments.length} Pending</span>
+            <span className="bg-red-50 text-red-700 ring-1 ring-red-200 text-xs px-2.5 py-1 rounded-full font-bold">{notifications.length || pendingAppointments.length} Pending</span>
           </div>
 
           <div className="flex-1 space-y-4">
-             {pendingAppointments.length > 0 ? pendingAppointments.slice(0, 5).map(appt => (
-                <div key={appt.id} className="p-4 bg-amber-50/50 ring-1 ring-amber-100 rounded-xl">
-                  <h4 className="font-bold text-gray-900 text-sm">{appt.patient_name}</h4>
-                  <p className="text-xs text-gray-600 mt-1 mb-3 line-clamp-2 leading-relaxed">{appt.notes || "New appointment request pending review."}</p>
+             {notifications.length > 0 ? notifications.slice(0, 5).map((item) => (
+                <div key={item.id} className="p-4 bg-amber-50/50 ring-1 ring-amber-100 rounded-xl">
+                  <h4 className="font-bold text-gray-900 text-sm">{item.title}</h4>
+                  <p className="text-xs text-gray-600 mt-1 mb-3 line-clamp-2 leading-relaxed">{item.message}</p>
                   <Link href="/therapist/appointments" className="w-full flex items-center justify-center py-2 bg-white text-amber-700 font-bold ring-1 ring-amber-200 rounded-lg hover:bg-amber-50 hover:shadow-sm transition-all text-sm">
                     Review Request
                   </Link>

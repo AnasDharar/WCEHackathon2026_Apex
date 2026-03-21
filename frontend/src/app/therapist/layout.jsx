@@ -151,7 +151,7 @@ export default function TherapistLayout({ children }) {
             <div className="px-3 py-3">
               <button
                 onClick={() => {
-                  window.localStorage.removeItem("user_session");
+                  window.localStorage.removeItem("manah_arogya_user_session_v1");
                   router.push("/signin");
                 }}
                 className={`group w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-neutral-700 hover:text-red-600 hover:bg-red-50/80 transition-all duration-200 ease-in-out ${

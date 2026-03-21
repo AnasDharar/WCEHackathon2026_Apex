@@ -33,9 +33,10 @@ export default function TherapistMessagesPage() {
   const fetchPatients = async () => {
     try {
       const res = await api.get("/therapist/patients");
-      setPatients(res.data?.data || []);
-      if (res.data?.data?.length > 0) {
-        setSelectedPatient(res.data.data[0]);
+      const nextPatients = Array.isArray(res?.data) ? res.data : [];
+      setPatients(nextPatients);
+      if (nextPatients.length > 0) {
+        setSelectedPatient(nextPatients[0]);
       }
     } catch (err) {
       console.error(err);
@@ -48,7 +49,7 @@ export default function TherapistMessagesPage() {
     setLoadingChat(true);
     try {
       const res = await api.get(`/therapist/chat/${id}`);
-      setMessages(res.data?.data || []);
+      setMessages(Array.isArray(res?.data) ? res.data : []);
     } catch (err) {
       console.error(err);
     } finally {

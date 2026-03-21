@@ -29,7 +29,7 @@ export default function TherapistResourcesPage() {
     setLoadingPatients(true);
     try {
       const res = await api.get("/therapist/patients");
-      setPatients(res.data?.data || []);
+      setPatients(Array.isArray(res?.data) ? res.data : []);
     } catch (err) {
       console.error(err);
     } finally {

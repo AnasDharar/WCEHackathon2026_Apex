@@ -222,8 +222,8 @@ export default function Appointments() {
       const appointment = normalizeAppointments([res?.appointment || res?.data])[0] || {};
 
       addNotification({
-        title: "Appointment Booked",
-        message: `Session with ${appointment?.doctor || selectedCounselor.name} scheduled.`,
+        title: "Appointment Requested",
+        message: `Your request was sent to ${appointment?.doctor || selectedCounselor.name} for approval.`,
       });
 
       setSelectedCounselor(null);
@@ -490,8 +490,8 @@ export default function Appointments() {
                             >
                             <option value="">Reschedule slot</option>
                             {openSlots.map((slot) => (
-                                <option key={`${item.id}-${slot}`} value={slot}>
-                                {slot}
+                                <option key={`${item.id}-${slot.display}`} value={slot.display}>
+                                {slot.display}
                                 </option>
                             ))}
                             </select>

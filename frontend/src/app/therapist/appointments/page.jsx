@@ -20,7 +20,7 @@ export default function TherapistAppointmentsPage() {
     setLoading(true);
     try {
       const apptsRes = await api.get("/therapist/appointments");
-      setAppointments(apptsRes.data?.data || []);
+      setAppointments(Array.isArray(apptsRes?.data) ? apptsRes.data : []);
     } catch (err) {
       setError(err.message || "Failed to load appointments");
     } finally {
@@ -61,11 +61,19 @@ export default function TherapistAppointmentsPage() {
   };
 
   const saveAppointmentDetails = async () => {
+    if (!editModal.appt) return;
     setProcessing(true);
     try {
-      await api.patch(`/therapist/appointments/${editModal.appt.id}/status`, { status: 'rescheduled' });
+      const startIso = new Date(editModal.start_time).toISOString();
+      const endIso = new Date(new Date(editModal.start_time).getTime() + 60 * 60 * 1000).toISOString();
+      await api.patch(`/therapist/appointments/${editModal.appt.id}`, {
+        start_time: startIso,
+        end_time: endIso,
+        mode: editModal.mode,
+        location: editModal.mode === "Offline" ? (editModal.location || null) : null,
+      });
       setEditModal({ open: false, appt: null, mode: "Online", start_time: "", location: "" });
-      fetchAppointments();
+      await fetchAppointments();
     } catch (err) {
       setError(err.message || "Failed to update appointment");
     } finally {
@@ -182,7 +190,15 @@ export default function TherapistAppointmentsPage() {
                     <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-700 bg-emerald-50 ring-1 ring-emerald-200 px-2 py-0.5 rounded">
                       {appt.status}
                     </span>
+                    {appt.calendar_sync_status === "sync_failed" && (
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-amber-700 bg-amber-50 ring-1 ring-amber-200 px-2 py-0.5 rounded">
+                        Calendar issue
+                      </span>
+                    )}
                   </div>
+                  {appt.calendar_sync_error && (
+                    <p className="mt-2 text-xs font-medium text-amber-700">{appt.calendar_sync_error}</p>
+                  )}
                 </div>
               </div>
 
@@ -341,7 +357,7 @@ export default function TherapistAppointmentsPage() {
                 disabled={processing}
                 className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-lg transition-colors disabled:opacity-50 text-sm shadow-sm"
               >
-                {processing ? "Saving..." : "Save Changes"}
+                {processing ? "Saving..." : "Save & Sync"}
               </button>
             </div>
           </div>
