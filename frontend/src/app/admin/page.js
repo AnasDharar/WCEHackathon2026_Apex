@@ -1,6 +1,6 @@
 export default function AdminDashboardPage() {
   return (
-    <div className="space-y-6">
+    <div className="space-y-6" >
       <h1 className="text-3xl font-bold text-gray-900">Admin Overview</h1>
       <p className="text-gray-600 max-w-2xl">
         Welcome to the Manah Arogya Admin Panel. Use the sidebar to navigate through 
