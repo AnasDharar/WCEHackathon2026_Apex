@@ -224,23 +224,16 @@ img, video, canvas, svg {
   -webkit-overflow-scrolling: touch;
 }
 
-/* Touch-friendly minimum tap targets */
+/* Touch-friendly minimum tap targets (only standalone interactive elements) */
 @media (max-width: 768px) {
   button,
-  [role="button"],
-  a {
+  [role="button"] {
     min-height: 44px;
   }
 
   /* Prevent text from being too small on mobile */
   input, textarea, select {
     font-size: 16px; /* prevents iOS zoom on focus */
-  }
-
-  /* Fix fixed-position elements on iOS */
-  .fixed {
-    -webkit-backface-visibility: hidden;
-    backface-visibility: hidden;
   }
 }
 
