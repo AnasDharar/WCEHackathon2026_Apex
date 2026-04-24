@@ -209,3 +209,43 @@ canvas {
     @apply cursor-pointer;
   }
 }
+
+/* ─── Mobile-first responsive utilities ─── */
+
+/* Ensure all images/media are responsive */
+img, video, canvas, svg {
+  max-width: 100%;
+  height: auto;
+}
+
+/* Make tables scrollable on small screens */
+.table-responsive {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Touch-friendly minimum tap targets */
+@media (max-width: 768px) {
+  button,
+  [role="button"],
+  a {
+    min-height: 44px;
+  }
+
+  /* Prevent text from being too small on mobile */
+  input, textarea, select {
+    font-size: 16px; /* prevents iOS zoom on focus */
+  }
+
+  /* Fix fixed-position elements on iOS */
+  .fixed {
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
+  }
+}
+
+/* Prevent horizontal scroll globally */
+html, body {
+  overflow-x: hidden;
+  max-width: 100vw;
+}
