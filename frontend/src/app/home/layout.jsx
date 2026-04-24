@@ -214,15 +214,15 @@ export default function HomeLayout({ children }) {
         )}
       </button>
 
-      {/* Mobile overlay backdrop */}
-      {mobileMenuOpen && (
-        <div
-          className="fixed inset-0 z-30 bg-black/30 md:hidden"
-          onClick={() => setMobileMenuOpen(false)}
-        />
-      )}
-
       <div className="flex h-full w-full z-10 relative">
+        {/* Mobile overlay backdrop - must be inside the z-10 container */}
+        {mobileMenuOpen && (
+          <div
+            className="fixed inset-0 z-30 bg-black/30 md:hidden"
+            onClick={() => setMobileMenuOpen(false)}
+          />
+        )}
+
         <MoodCheckInModal
         open={moodModalOpen}
         saving={savingMood}
